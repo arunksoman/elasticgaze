@@ -193,8 +193,8 @@
 </script>
 <div class="flex h-screen theme-bg-primary transition-colors duration-300">
 	<!-- Sidebar -->
-	<nav class={`flex flex-col justify-between h-full py-4 px-2 theme-bg-secondary shadow-lg transition-all duration-300 ${expanded ? 'w-56' : 'w-16'} relative z-10`}>
-		<div>
+	<nav class={`flex flex-col h-full py-4 px-2 theme-bg-secondary shadow-lg transition-all duration-300 ${expanded ? 'w-56' : 'w-16'} relative z-10`}>
+		<div class="flex-1">
 			<!-- Hamburger -->
 					<button
 						class="flex items-center justify-center w-12 h-12 mb-2 rounded-lg transition theme-text-primary theme-hover"
@@ -230,18 +230,25 @@
 				{/each}
 			</ul>
 		</div>
-		<!-- Settings Button -->
-		<div class="mb-2">
-					<button
-						class="flex items-center w-full h-12 rounded-lg transition group theme-text-primary theme-hover"
-						onclick={openSettings}
-						aria-label="Settings"
-					>
-						<img src={SettingsIcon} alt="Settings" class="w-6 h-6 mx-4 transition-all duration-300 theme-icon" />
-						{#if expanded}
-							<span class="ml-2 text-base font-medium whitespace-nowrap">Settings</span>
-						{/if}
-					</button>
+		<!-- Bottom section with Settings and Version -->
+		<div class="flex flex-col">
+			<!-- Settings Button -->
+			<div class="mb-2">
+						<button
+							class="flex items-center w-full h-12 rounded-lg transition group theme-text-primary theme-hover"
+							onclick={openSettings}
+							aria-label="Settings"
+						>
+							<img src={SettingsIcon} alt="Settings" class="w-6 h-6 mx-4 transition-all duration-300 theme-icon" />
+							{#if expanded}
+								<span class="ml-2 text-base font-medium whitespace-nowrap">Settings</span>
+							{/if}
+						</button>
+			</div>
+			<!-- Version Number -->
+			<div class="mb-4 px-4">
+				<span class="text-xs theme-text-secondary opacity-70">V0.0.1</span>
+			</div>
 		</div>
 		<!-- Settings Popup -->
 		{#if showSettings}
@@ -292,13 +299,13 @@
 <!-- Window Controls (top-right) -->
 <div class="fixed top-2 right-2 flex gap-2 items-center z-[1000]" style="-webkit-app-region: no-drag;" aria-label="Window controls">
 	<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-sm hover:bg-black/[0.02] dark:hover:bg-white/[0.05] active:translate-y-[0.5px]" title="Minimize" onclick={handleMinimise} aria-label="Minimize">
-		<span class="w-4 h-4 inline-block transition-colors duration-300" style="background-color: var(--window-control-icon); mask-image: url('/icons/minimize.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/minimize.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;" onmouseenter={(e) => e.target.style.backgroundColor = 'var(--window-control-icon-hover)'} onmouseleave={(e) => e.target.style.backgroundColor = 'var(--window-control-icon)'}></span>
+		<span class="w-4 h-4 inline-block transition-colors duration-300" style="background-color: var(--window-control-icon); mask-image: url('/icons/minimize.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/minimize.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;" onmouseenter={(e) => e.target.style.backgroundColor = 'var(--window-control-icon-hover)'} onmouseleave={(e) => e.target.style.backgroundColor = 'var(--window-control-icon)'} role="img" aria-label="Minimize icon"></span>
 	</button>
 	<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-sm hover:bg-black/[0.02] dark:hover:bg-white/[0.05] active:translate-y-[0.5px]" title={isMax ? 'Restore' : 'Maximize'} onclick={handleToggleMaximise} aria-label={isMax ? 'Restore' : 'Maximize'}>
-		<span class="w-4 h-4 inline-block transition-colors duration-300" style={`background-color: var(--window-control-icon); mask-image: url('/icons/${isMax ? 'restore' : 'maximize'}.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/${isMax ? 'restore' : 'maximize'}.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;`} onmouseenter={(e) => e.target.style.backgroundColor = 'var(--window-control-icon-hover)'} onmouseleave={(e) => e.target.style.backgroundColor = 'var(--window-control-icon)'}></span>
+		<span class="w-4 h-4 inline-block transition-colors duration-300" style={`background-color: var(--window-control-icon); mask-image: url('/icons/${isMax ? 'restore' : 'maximize'}.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/${isMax ? 'restore' : 'maximize'}.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;`} onmouseenter={(e) => e.target.style.backgroundColor = 'var(--window-control-icon-hover)'} onmouseleave={(e) => e.target.style.backgroundColor = 'var(--window-control-icon)'} role="img" aria-label={isMax ? 'Restore icon' : 'Maximize icon'}></span>
 	</button>
 	<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-red-500/35 hover:bg-red-500/[0.06] active:translate-y-[0.5px]" title="Close" onclick={handleClose} aria-label="Close">
-		<span class="w-4 h-4 inline-block transition-colors duration-300" style="background-color: var(--window-control-close-icon); mask-image: url('/icons/close.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/close.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;" onmouseenter={(e) => e.target.style.backgroundColor = 'var(--window-control-close-icon-hover)'} onmouseleave={(e) => e.target.style.backgroundColor = 'var(--window-control-close-icon)'}></span>
+		<span class="w-4 h-4 inline-block transition-colors duration-300" style="background-color: var(--window-control-close-icon); mask-image: url('/icons/close.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/close.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;" onmouseenter={(e) => e.target.style.backgroundColor = 'var(--window-control-close-icon-hover)'} onmouseleave={(e) => e.target.style.backgroundColor = 'var(--window-control-close-icon)'} role="img" aria-label="Close icon"></span>
 	</button>
 	<div class="absolute -top-2 -right-2 -bottom-2 -left-2 pointer-events-none" aria-hidden="true"></div>
 </div>
