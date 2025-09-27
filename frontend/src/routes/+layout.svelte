@@ -2,6 +2,7 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 	// Wails runtime controls
 	import {
 		WindowMinimise,
@@ -79,10 +80,9 @@
 	import SnapshotIcon from '../../build/icons/snapshot.svg';
 	import SettingsIcon from '../../build/icons/settings.svg';
 
-	let expanded = false;
+	let expanded = $state(false);
 	let hoverIndex = null;
-	let activeIndex = 0;
-	let showSettings = false;
+	let showSettings = $state(false);
 	let theme = 'light';
 
 	const menu = [
@@ -95,8 +95,11 @@
 	  { name: 'Snapshot', icon: SnapshotIcon, route: '/snapshot' }
 	];
 
+	const activeIndex = $derived(
+		menu.findIndex((item) => item.route === $page.url.pathname)
+	);
+
 	function handleMenuClick(idx) {
-	  activeIndex = idx;
 	  goto(menu[idx].route);
 	}
 
@@ -158,13 +161,16 @@
 										onmouseenter={() => handleHover(idx)}
 										onmouseleave={handleMouseLeave}
 									>
-										<img src={item.icon} alt={item.name} class={`w-6 h-6 mx-4 ${activeIndex === idx ? 'active-menu-icon' : ''}`} />
-<style>
-	.active-menu-icon {
-		filter: drop-shadow(0 0 4px #A020F0);
-		/* For SVGs loaded as <img>, color/fill won't work, so use drop-shadow and optionally SVGs with currentColor */
-	}
-</style>
+										<img
+											src={item.icon}
+											alt={item.name}
+											class={`w-6 h-6 mx-4 transition-all duration-300 ${
+												activeIndex === idx
+													? 'filter drop-shadow-lg'
+													: 'filter-none'
+											}`}
+											style={activeIndex === idx ? 'filter: drop-shadow(0 0 5px #A020F0);' : ''}
+										/>
 										{#if expanded}
 											<span class="ml-2 text-base font-medium whitespace-nowrap">{item.name}</span>
 										{/if}
