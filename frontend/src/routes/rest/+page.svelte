@@ -17,13 +17,13 @@
 </script>
 
 <div class="p-6">
-	<h1 class="text-2xl font-medium mb-4 text-gray-900 dark:text-gray-100">REST API</h1>
-	<div class="bg-fluent-surface-light dark:bg-fluent-surface-dark p-6 shadow-fluent rounded-lg">
+	<h1 class="text-2xl font-medium mb-4 theme-text-primary">REST API</h1>
+	<div class="theme-bg-secondary p-6 shadow-fluent rounded-lg">
 		<div class="mb-4">
 			<div class="flex gap-2 mb-2">
 				<select 
 					bind:value={method}
-					class="border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark text-gray-900 dark:text-gray-100 rounded"
+					class="border theme-border p-2 theme-bg-tertiary theme-text-primary rounded"
 				>
 					<option value="GET">GET</option>
 					<option value="POST">POST</option>
@@ -34,7 +34,7 @@
 					type="text" 
 					bind:value={endpoint}
 					placeholder="/_cluster/health"
-					class="flex-1 border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark text-gray-900 dark:text-gray-100 rounded"
+					class="flex-1 border theme-border p-2 theme-bg-tertiary theme-text-primary rounded"
 				/>
 				<button 
 					onclick={handleRequest}
@@ -45,18 +45,18 @@
 			</div>
 			
 			<div class="mb-2">
-				<label class="block mb-1 text-gray-900 dark:text-gray-100 font-medium">Request Body</label>
+				<label class="block mb-1 theme-text-primary font-medium">Request Body</label>
 				<textarea 
 					bind:value={requestBody}
 					rows="5"
-					class="w-full border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark text-gray-900 dark:text-gray-100 font-mono rounded"
+					class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary font-mono rounded"
 				></textarea>
 			</div>
 			
 			{#if responseData}
 				<div>
-					<label class="block mb-1 text-gray-900 dark:text-gray-100 font-medium">Response</label>
-					<pre class="border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark text-gray-900 dark:text-gray-100 font-mono overflow-auto rounded">{responseData}</pre>
+					<label class="block mb-1 theme-text-primary font-medium">Response</label>
+					<pre class="border theme-border p-2 theme-bg-tertiary theme-text-primary font-mono overflow-auto rounded">{responseData}</pre>
 				</div>
 			{/if}
 		</div>

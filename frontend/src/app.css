@@ -1,3 +1,53 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+/* Theme CSS Variables */
+:root {
+  /* Light theme (default) */
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #222222;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border-color: #e5e7eb;
+  --icon-filter: none;
+  --hover-bg: #f3f4f6;
+  
+  /* Window control buttons */
+  --window-control-icon: #222222;
+  --window-control-icon-hover: #444444;
+  --window-control-close-icon: #dc2626;
+  --window-control-close-icon-hover: #dc2626;
+}
+
+:root.dark {
+  /* Dark theme */
+  --bg-primary: #111827;
+  --bg-secondary: #374151;
+  --bg-tertiary: #4b5563;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --border-color: #6b7280;
+  --icon-filter: invert(1);
+  --hover-bg: #374151;
+  
+  /* Window control buttons */
+  --window-control-icon: #dddddd;
+  --window-control-icon-hover: #bbbbbb;
+  --window-control-close-icon: #dc2626;
+  --window-control-close-icon-hover: #dc2626;
+}
+
+/* Base theme classes */
+.theme-bg-primary { background-color: var(--bg-primary); }
+.theme-bg-secondary { background-color: var(--bg-secondary); }
+.theme-bg-tertiary { background-color: var(--bg-tertiary); }
+.theme-text-primary { color: var(--text-primary); }
+.theme-text-secondary { color: var(--text-secondary); }
+.theme-text-muted { color: var(--text-muted); }
+.theme-border { border-color: var(--border-color); }
+.theme-icon { filter: var(--icon-filter); }
+.theme-hover:hover { background-color: var(--hover-bg); }
