@@ -154,22 +154,21 @@
 				{#each menu as item, idx}
 					<li>
 									<button
-										class={`flex items-center w-full h-12 mb-1 rounded-lg transition group
-											${activeIndex === idx ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 shadow-md' : 'text-gray-600 dark:text-gray-300'}
+										class={`relative flex items-center w-full h-12 mb-1 rounded-lg transition-colors group
+											${activeIndex === idx ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-300'}
 											hover:bg-gray-100 dark:hover:bg-gray-700`}
 										onclick={() => handleMenuClick(idx)}
 										onmouseenter={() => handleHover(idx)}
 										onmouseleave={handleMouseLeave}
 									>
+										{#if activeIndex === idx}
+											<div class="absolute top-0 left-0 right-0 h-0.5 bg-purple-600"></div>
+										{/if}
 										<img
 											src={item.icon}
 											alt={item.name}
-											class={`w-6 h-6 mx-4 transition-all duration-300 ${
-												activeIndex === idx
-													? 'filter drop-shadow-lg'
-													: 'filter-none'
-											}`}
-											style={activeIndex === idx ? 'filter: drop-shadow(0 0 5px #A020F0);' : ''}
+											class="w-6 h-6 mx-4 transition-all duration-300"
+											style={activeIndex === idx ? 'filter: brightness(0) saturate(100%) invert(34%) sepia(98%) saturate(2546%) hue-rotate(259deg) brightness(99%) contrast(92%);' : 'filter: none;'}
 										/>
 										{#if expanded}
 											<span class="ml-2 text-base font-medium whitespace-nowrap">{item.name}</span>
