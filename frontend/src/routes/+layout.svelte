@@ -52,6 +52,11 @@
 		}
 	}
 	
+	function handleConnection() {
+		// Navigate to connections management page
+		goto('/connections');
+	}
+	
 	onMount(() => {
 		// Window initialization for Wails
 		if (hasWails()) {
@@ -298,6 +303,12 @@
 
 <!-- Window Controls (top-right) -->
 <div class="fixed top-2 right-2 flex gap-2 items-center z-[1000]" style="-webkit-app-region: no-drag;" aria-label="Window controls">
+	<!-- Connection Button -->
+	<div class="mr-5">
+		<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-sm hover:bg-black/[0.02] dark:hover:bg-white/[0.05] active:translate-y-[0.5px]" title="Elasticsearch Connections" onclick={handleConnection} aria-label="Elasticsearch Connections">
+			<span class="w-4 h-4 inline-block transition-colors duration-300" style="background-color: var(--window-control-icon); mask-image: url('/icons/connect_elastic.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/connect_elastic.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;" onmouseenter={(e) => e.target.style.backgroundColor = 'var(--window-control-icon-hover)'} onmouseleave={(e) => e.target.style.backgroundColor = 'var(--window-control-icon)'} role="img" aria-label="Connection icon"></span>
+		</button>
+	</div>
 	<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-sm hover:bg-black/[0.02] dark:hover:bg-white/[0.05] active:translate-y-[0.5px]" title="Minimize" onclick={handleMinimise} aria-label="Minimize">
 		<span class="w-4 h-4 inline-block transition-colors duration-300" style="background-color: var(--window-control-icon); mask-image: url('/icons/minimize.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/minimize.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;" onmouseenter={(e) => e.target.style.backgroundColor = 'var(--window-control-icon-hover)'} onmouseleave={(e) => e.target.style.backgroundColor = 'var(--window-control-icon)'} role="img" aria-label="Minimize icon"></span>
 	</button>
