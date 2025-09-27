@@ -5,6 +5,20 @@
 	let requestBody = '{}';
 	let responseData = '';
 	
+	// Postman-style method colors
+	function getMethodColor(methodName) {
+		const colors = {
+			'GET': 'text-green-500',
+			'POST': 'text-orange-500',
+			'PUT': 'text-blue-500',
+			'DELETE': 'text-red-500',
+			// 'PATCH': 'text-purple-500',
+			// 'HEAD': 'text-gray-500',
+			// 'OPTIONS': 'text-indigo-500'
+		};
+		return colors[methodName] || 'text-gray-400';
+	}
+	
 	function handleRequest() {
 		// Placeholder for REST API request functionality
 		console.log('REST Request:', method, endpoint, requestBody);
@@ -23,12 +37,15 @@
 			<div class="flex gap-2 mb-2">
 				<select 
 					bind:value={method}
-					class="border theme-border p-2 theme-bg-tertiary theme-text-primary rounded"
+					class={`border theme-border p-2 theme-bg-tertiary rounded font-semibold ${getMethodColor(method)}`}
 				>
-					<option value="GET">GET</option>
-					<option value="POST">POST</option>
-					<option value="PUT">PUT</option>
-					<option value="DELETE">DELETE</option>
+					<option value="GET" class="text-green-500 font-semibold">GET</option>
+					<option value="POST" class="text-orange-500 font-semibold">POST</option>
+					<option value="PUT" class="text-blue-500 font-semibold">PUT</option>
+					<option value="DELETE" class="text-red-500 font-semibold">DELETE</option>
+					<!-- <option value="PATCH" class="text-purple-500 font-semibold">PATCH</option> -->
+					<!-- <option value="HEAD" class="text-gray-500 font-semibold">HEAD</option> -->
+					<!-- <option value="OPTIONS" class="text-indigo-500 font-semibold">OPTIONS</option> -->
 				</select>
 				<input 
 					type="text" 
