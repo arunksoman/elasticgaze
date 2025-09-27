@@ -17,13 +17,13 @@
 </script>
 
 <div class="p-6">
-	<h1 class="text-2xl font-medium mb-4">REST API</h1>
-	<div class="bg-fluent-surface-light dark:bg-fluent-surface-dark p-6 shadow-fluent">
+	<h1 class="text-2xl font-medium mb-4 text-gray-900 dark:text-gray-100">REST API</h1>
+	<div class="bg-fluent-surface-light dark:bg-fluent-surface-dark p-6 shadow-fluent rounded-lg">
 		<div class="mb-4">
 			<div class="flex gap-2 mb-2">
 				<select 
 					bind:value={method}
-					class="border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark"
+					class="border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark text-gray-900 dark:text-gray-100 rounded"
 				>
 					<option value="GET">GET</option>
 					<option value="POST">POST</option>
@@ -34,29 +34,29 @@
 					type="text" 
 					bind:value={endpoint}
 					placeholder="/_cluster/health"
-					class="flex-1 border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark"
+					class="flex-1 border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark text-gray-900 dark:text-gray-100 rounded"
 				/>
 				<button 
 					onclick={handleRequest}
-					class="fluent-btn bg-fluent-purple hover:bg-fluent-purple-light text-white px-4"
+					class="fluent-btn bg-fluent-purple hover:bg-fluent-purple-light text-white px-4 rounded"
 				>
 					Send
 				</button>
 			</div>
 			
 			<div class="mb-2">
-				<label class="block mb-1">Request Body</label>
+				<label class="block mb-1 text-gray-900 dark:text-gray-100 font-medium">Request Body</label>
 				<textarea 
 					bind:value={requestBody}
 					rows="5"
-					class="w-full border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark font-mono"
+					class="w-full border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark text-gray-900 dark:text-gray-100 font-mono rounded"
 				></textarea>
 			</div>
 			
 			{#if responseData}
 				<div>
-					<label class="block mb-1">Response</label>
-					<pre class="border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark font-mono overflow-auto">{responseData}</pre>
+					<label class="block mb-1 text-gray-900 dark:text-gray-100 font-medium">Response</label>
+					<pre class="border border-fluent-border-light dark:border-fluent-border-dark p-2 bg-fluent-bg-light dark:bg-fluent-bg-dark text-gray-900 dark:text-gray-100 font-mono overflow-auto rounded">{responseData}</pre>
 				</div>
 			{/if}
 		</div>

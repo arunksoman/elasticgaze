@@ -70,6 +70,8 @@
 		}
 	});
 	import { goto } from '$app/navigation';
+	import { theme } from '$lib/theme.js';
+	
 	const HomeIcon = '/icons/home.svg';
 	const HamburgerIcon = '/icons/hamburger.svg';
 	const NodesIcon = '/icons/nodes.svg';
@@ -83,7 +85,6 @@
 	let expanded = $state(false);
 	let hoverIndex = null;
 	let showSettings = $state(false);
-	let theme = 'light';
 
 	const menu = [
 	  { name: 'Home', icon: HomeIcon, route: '/' },
@@ -126,15 +127,22 @@
 	}
 
 	function setTheme(t) {
-	  theme = t;
-	  document.documentElement.classList.toggle('dark', t === 'dark');
-	  closeSettings();
+		theme.set(t);
+		document.documentElement.classList.toggle('dark', t === 'dark');
+		// Save to localStorage
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('theme', t);
+		}
+		closeSettings();
 	}
 
 	onMount(() => {
-	  if (theme === 'dark') {
-	    document.documentElement.classList.add('dark');
-	  }
+		// Load theme from localStorage or default to 'light'
+		if (typeof window !== 'undefined') {
+			const savedTheme = localStorage.getItem('theme') || 'light';
+			theme.set(savedTheme);
+			document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+		}
 	});
 </script>
 <div class={`flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300`}>
@@ -147,7 +155,7 @@
 						onclick={toggleSidebar}
 						aria-label="Toggle menu"
 					>
-						<img src={HamburgerIcon} alt="Menu" class="w-6 h-6" />
+						<img src={HamburgerIcon} alt="Menu" class="w-6 h-6 dark:invert transition-all duration-300" />
 					</button>
 			<!-- Menu Items -->
 			<ul class="mt-2">
@@ -167,8 +175,8 @@
 										<img
 											src={item.icon}
 											alt={item.name}
-											class="w-6 h-6 mx-4 transition-all duration-300"
-											style={activeIndex === idx ? 'filter: brightness(0) saturate(100%) invert(34%) sepia(98%) saturate(2546%) hue-rotate(259deg) brightness(99%) contrast(92%);' : 'filter: none;'}
+											class={`w-6 h-6 mx-4 transition-all duration-300 ${activeIndex === idx ? '' : 'dark:invert'}`}
+											style={activeIndex === idx ? 'filter: brightness(0) saturate(100%) invert(34%) sepia(98%) saturate(2546%) hue-rotate(259deg) brightness(99%) contrast(92%);' : ''}
 										/>
 										{#if expanded}
 											<span class="ml-2 text-base font-medium whitespace-nowrap">{item.name}</span>
@@ -185,7 +193,7 @@
 						onclick={openSettings}
 						aria-label="Settings"
 					>
-						<img src={SettingsIcon} alt="Settings" class="w-6 h-6 mx-4" />
+						<img src={SettingsIcon} alt="Settings" class="w-6 h-6 mx-4 dark:invert transition-all duration-300" />
 						{#if expanded}
 							<span class="ml-2 text-base font-medium whitespace-nowrap">Settings</span>
 						{/if}
@@ -216,14 +224,14 @@
 
 <!-- Window Controls (top-right) -->
 <div class="fixed top-2 right-2 flex gap-2 items-center z-[1000]" style="-webkit-app-region: no-drag;" aria-label="Window controls">
-	<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-sm hover:bg-black/[0.02] active:translate-y-[0.5px]" title="Minimize" onclick={handleMinimise} aria-label="Minimize">
-		<span class="w-4 h-4 inline-block bg-[#222] hover:bg-[#444]" style="mask-image: url('/icons/minimize.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/minimize.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;"></span>
+	<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-sm hover:bg-black/[0.02] dark:hover:bg-white/[0.05] active:translate-y-[0.5px]" title="Minimize" onclick={handleMinimise} aria-label="Minimize">
+		<span class="w-4 h-4 inline-block bg-[#222] dark:bg-[#ddd] hover:bg-[#444] dark:hover:bg-[#bbb] transition-colors duration-300" style="mask-image: url('/icons/minimize.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/minimize.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;"></span>
 	</button>
-	<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-sm hover:bg-black/[0.02] active:translate-y-[0.5px]" title={isMax ? 'Restore' : 'Maximize'} onclick={handleToggleMaximise} aria-label={isMax ? 'Restore' : 'Maximize'}>
-		<span class="w-4 h-4 inline-block bg-[#222] hover:bg-[#444]" style={`mask-image: url('/icons/${isMax ? 'restore' : 'maximize'}.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/${isMax ? 'restore' : 'maximize'}.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;`}></span>
+	<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-sm hover:bg-black/[0.02] dark:hover:bg-white/[0.05] active:translate-y-[0.5px]" title={isMax ? 'Restore' : 'Maximize'} onclick={handleToggleMaximise} aria-label={isMax ? 'Restore' : 'Maximize'}>
+		<span class="w-4 h-4 inline-block bg-[#222] dark:bg-[#ddd] hover:bg-[#444] dark:hover:bg-[#bbb] transition-colors duration-300" style={`mask-image: url('/icons/${isMax ? 'restore' : 'maximize'}.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/${isMax ? 'restore' : 'maximize'}.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;`}></span>
 	</button>
 	<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-red-500/35 hover:bg-red-500/[0.06] active:translate-y-[0.5px]" title="Close" onclick={handleClose} aria-label="Close">
-		<span class="w-4 h-4 inline-block bg-[#222] hover:bg-red-500" style="mask-image: url('/icons/close.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/close.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;"></span>
+		<span class="w-4 h-4 inline-block bg-[#222] dark:bg-[#ddd] hover:bg-red-500 transition-colors duration-300" style="mask-image: url('/icons/close.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; -webkit-mask-image: url('/icons/close.svg'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;"></span>
 	</button>
 	<div class="absolute -top-2 -right-2 -bottom-2 -left-2 pointer-events-none" aria-hidden="true"></div>
 </div>
