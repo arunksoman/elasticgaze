@@ -2,7 +2,7 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	// Wails runtime controls
 	import {
 		WindowMinimise,
@@ -70,15 +70,15 @@
 		}
 	});
 	import { goto } from '$app/navigation';
-	import HomeIcon from '../../build/icons/home.svg';
-	import HamburgerIcon from '../../build/icons/hamburger.svg';
-	import NodesIcon from '../../build/icons/nodes.svg';
-	import ShardsIcon from '../../build/icons/shards.svg';
-	import IndicesIcon from '../../build/icons/index.svg';
-	import SearchIcon from '../../build/icons/search.svg';
-	import RestIcon from '../../build/icons/rest.svg';
-	import SnapshotIcon from '../../build/icons/snapshot.svg';
-	import SettingsIcon from '../../build/icons/settings.svg';
+	const HomeIcon = '/icons/home.svg';
+	const HamburgerIcon = '/icons/hamburger.svg';
+	const NodesIcon = '/icons/nodes.svg';
+	const ShardsIcon = '/icons/shards.svg';
+	const IndicesIcon = '/icons/index.svg';
+	const SearchIcon = '/icons/search.svg';
+	const RestIcon = '/icons/rest.svg';
+	const SnapshotIcon = '/icons/snapshot.svg';
+	const SettingsIcon = '/icons/settings.svg';
 
 	let expanded = $state(false);
 	let hoverIndex = null;
@@ -96,7 +96,7 @@
 	];
 
 	const activeIndex = $derived(
-		menu.findIndex((item) => item.route === $page.url.pathname)
+		menu.findIndex((item) => item.route === page.url.pathname)
 	);
 
 	function handleMenuClick(idx) {
