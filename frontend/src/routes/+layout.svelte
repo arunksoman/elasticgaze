@@ -136,7 +136,7 @@
 	  { name: 'Shards', icon: ShardsIcon, route: '/shards' },
 	  { name: 'Indices', icon: IndicesIcon, route: '/indices' },
 	  { name: 'Search', icon: SearchIcon, route: '/search' },
-	  { name: 'Rest', icon: RestIcon, route: '/rest' },
+	  { name: 'REST', icon: RestIcon, route: '/rest' },
 	  { name: 'Snapshot', icon: SnapshotIcon, route: '/snapshot' }
 	];
 
