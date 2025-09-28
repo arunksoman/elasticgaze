@@ -1,4 +1,20 @@
 <script>
+	/**
+	 * @fileoverview Elasticsearch Connections Management Page
+	 * 
+	 * Main page component for managing Elasticsearch connections. Provides functionality to:
+	 * - View all saved connections in a grid layout
+	 * - Add new connections via modal form
+	 * - Edit existing connections
+	 * - Delete connections with confirmation
+	 * - Test connection validity
+	 * - Set default connection for the application
+	 * - Display toast notifications for user feedback
+	 * 
+	 * This page orchestrates multiple child components and manages the overall state
+	 * for connection CRUD operations.
+	 */
+	
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Toast from '$lib/Toast.svelte';
@@ -6,40 +22,99 @@
 	import ConnectionForm from '$lib/components/ConnectionForm.svelte';
 	import { connections, connectionService } from '$lib/stores/connectionStore.js';
 	
-	// Component state
+	/**
+	 * @typedef {Object} Connection
+	 * @property {string|null} id - Unique connection identifier (null for new connections)
+	 * @property {string} name - Display name for the connection
+	 * @property {string} host - Elasticsearch host address
+	 * @property {number} port - Elasticsearch port number
+	 * @property {boolean} useSSL - Whether to use SSL/HTTPS
+	 * @property {('basic'|'apikey'|'none')} authType - Authentication type
+	 * @property {string} username - Username for basic auth
+	 * @property {string} password - Password for basic auth
+	 * @property {string} apiKey - API key for API key auth
+	 * @property {boolean} isDefault - Whether this is the default connection
+	 * @property {string} environmentColor - Environment color indicator
+	 */
+	
+	/**
+	 * @typedef {Object} ToastData
+	 * @property {string} message - Toast message text
+	 * @property {('success'|'error'|'info'|'warning')} type - Toast type for styling
+	 * @property {number} duration - Auto-hide duration in milliseconds
+	 * @property {('fade'|'slide')} animation - Animation type
+	 * @property {string} errorCode - Optional error code for error toasts
+	 * @property {string} errorDetails - Detailed error information
+	 */
+	
+	// ===== COMPONENT STATE =====
+	/** @type {boolean} Whether the connection form modal is visible */
 	let showForm = false;
+	
+	/** @type {Connection|null} Connection being edited (null for new connection) */
 	let editingConnection = null;
+	
+	/** @type {Connection} Form data for connection creation/editing */
 	let formData = connectionService.getDefaultFormData();
 	
-	// Toast state
+	// ===== TOAST STATE =====
+	/** @type {boolean} Whether toast notification is visible */
 	let toastShow = false;
+	
+	/** @type {string} Current toast message */
 	let toastMessage = '';
+	
+	/** @type {('success'|'error'|'info'|'warning')} Current toast type */
 	let toastType = 'success';
+	
+	/** @type {number} Toast auto-hide duration in milliseconds */
 	let toastDuration = 1500;
+	
+	/** @type {('fade'|'slide')} Toast animation type */
 	let toastAnimation = 'fade';
+	
+	/** @type {string} Optional error code for error toasts */
 	let toastErrorCode = '';
+	
+	/** @type {string} Detailed error information for error toasts */
 	let toastErrorDetails = '';
 	
-	// Testing state
+	// ===== TESTING STATE =====
+	/** @type {string|null} ID of connection currently being tested */
 	let testingConnectionId = null;
 	
-	// Subscribe to connections store
+	// ===== STORE SUBSCRIPTION =====
+	/** @type {Connection[]} Array of all connections from the store */
 	let connectionsArray = [];
+	
+	/** Store unsubscribe function for cleanup */
 	const unsubscribe = connections.subscribe(value => {
 		connectionsArray = value;
 	});
 	
+	/**
+	 * Initialize component by loading saved connections
+	 */
 	onMount(() => {
 		connectionService.load();
 	});
 
 	// Cleanup subscription on destroy
 	import { onDestroy } from 'svelte';
+	
+	/**
+	 * Cleanup store subscription when component is destroyed
+	 */
 	onDestroy(() => {
 		unsubscribe();
 	});
 
-	// Event handlers
+	// ===== EVENT HANDLERS =====
+	
+	/**
+	 * Opens the connection form modal for creating or editing a connection
+	 * @param {Connection|null} connection - Connection to edit, or null for new connection
+	 */
 	function openForm(connection = null) {
 		editingConnection = connection;
 		if (connection) {
@@ -50,11 +125,18 @@
 		showForm = true;
 	}
 
+	/**
+	 * Closes the connection form modal and resets editing state
+	 */
 	function closeForm() {
 		showForm = false;
 		editingConnection = null;
 	}
 
+	/**
+	 * Saves a connection (creates new or updates existing)
+	 * @param {Connection} connectionData - Connection data to save
+	 */
 	async function saveConnection(connectionData) {
 		try {
 			if (editingConnection) {
@@ -68,6 +150,10 @@
 		}
 	}
 
+	/**
+	 * Deletes a connection by ID
+	 * @param {string} connectionId - ID of connection to delete
+	 */
 	async function deleteConnection(connectionId) {
 		try {
 			await connectionService.delete(connectionId);
@@ -76,6 +162,10 @@
 		}
 	}
 
+	/**
+	 * Sets a connection as the default connection
+	 * @param {string} connectionId - ID of connection to set as default
+	 */
 	async function setAsDefault(connectionId) {
 		try {
 			await connectionService.setAsDefault(connectionId);
@@ -84,19 +174,39 @@
 		}
 	}
 
+	/**
+	 * Handles test start event by tracking which connection is being tested
+	 * @param {string} testingId - ID of connection being tested
+	 */
 	function handleTestStart(testingId) {
 		testingConnectionId = testingId;
 	}
 
+	/**
+	 * Handles test end event by clearing the testing state
+	 */
 	function handleTestEnd() {
 		testingConnectionId = null;
 	}
 
+	/**
+	 * Navigates back to the home page
+	 */
 	function goBack() {
 		goto('/');
 	}
 	
-	// Toast utility functions
+	// ===== TOAST UTILITY FUNCTIONS =====
+	
+	/**
+	 * Shows a toast notification with specified parameters
+	 * @param {string} message - Toast message text
+	 * @param {('success'|'error'|'info'|'warning')} type - Toast type for styling
+	 * @param {number} duration - Auto-hide duration in milliseconds
+	 * @param {('fade'|'slide')} animation - Animation type
+	 * @param {string} errorCode - Optional error code for error toasts
+	 * @param {string} errorDetails - Detailed error information
+	 */
 	function showToast(message, type = 'success', duration = 1500, animation = 'fade', errorCode = '', errorDetails = '') {
 		toastMessage = message;
 		toastType = type;
@@ -107,6 +217,9 @@
 		toastShow = true;
 	}
 
+	/**
+	 * Hides the current toast and clears error details
+	 */
 	function hideToast() {
 		toastShow = false;
 		// Clear error details when hiding
@@ -114,11 +227,18 @@
 		toastErrorDetails = '';
 	}
 
+	/**
+	 * Handles toast events from child components
+	 * @param {ToastData} toastData - Toast configuration object
+	 */
 	function handleToast(toastData) {
 		const { message, type, duration, animation, errorCode, errorDetails } = toastData;
 		showToast(message, type, duration, animation, errorCode, errorDetails);
 	}
 
+	/**
+	 * Handles add connection button click by opening the form
+	 */
 	function handleAddConnection() {
 		openForm();
 	}
