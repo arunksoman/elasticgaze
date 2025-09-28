@@ -1,18 +1,90 @@
-<script>
+<script lang="js">
 	import { TestConnection } from '$lib/wailsjs/go/main/App.js';
 	
-	// Props
+	/**
+	 * @typedef {Object} Connection
+	 * @property {string|null} id - Unique connection identifier (null for new connections)
+	 * @property {string} name - Display name for the connection
+	 * @property {string} host - Elasticsearch host address
+	 * @property {number} port - Elasticsearch port number
+	 * @property {boolean} useSSL - Whether to use SSL/HTTPS
+	 * @property {('basic'|'apikey'|'none')} authType - Authentication type
+	 * @property {string} username - Username for basic auth
+	 * @property {string} password - Password for basic auth
+	 * @property {string} apiKey - API key for API key auth
+	 * @property {boolean} isDefault - Whether this is the default connection
+	 * @property {string} environmentColor - Environment color indicator
+	 */
+	
+	/**
+	 * @typedef {Object} ToastData
+	 * @property {string} message - Toast message to display
+	 * @property {('success'|'error'|'warning'|'info')} [type] - Toast type
+	 * @property {number} [duration] - Toast duration in milliseconds
+	 * @property {string} [animation] - Toast animation type
+	 * @property {string} [errorCode] - Error code for error toasts
+	 * @property {string} [errorDetails] - Error details for error toasts
+	 */
+	
+	/**
+	 * Connection object containing all connection details
+	 * @type {Connection}
+	 */
 	export let connection;
+	
+	/**
+	 * ID of the connection currently being tested (for loading state)
+	 * @type {string|null}
+	 */
 	export let testingConnectionId = null;
 	
 	// Event props (Svelte 5 way)
+	/**
+	 * Callback function called when connection test starts
+	 * @type {function(string): void}
+	 * @param {string} connectionId - ID of the connection being tested
+	 */
 	export let onteststart;
+	
+	/**
+	 * Callback function called when connection test ends
+	 * @type {function(): void}
+	 */
 	export let ontestend;
+	
+	/**
+	 * Callback function called when edit button is clicked
+	 * @type {function(Connection): void}
+	 * @param {Connection} connection - The connection object to edit
+	 */
 	export let onedit;
+	
+	/**
+	 * Callback function called when delete button is clicked
+	 * @type {function(string): void}
+	 * @param {string} connectionId - ID of the connection to delete
+	 */
 	export let ondelete;
+	
+	/**
+	 * Callback function called when set as default button is clicked
+	 * @type {function(string): void}
+	 * @param {string} connectionId - ID of the connection to set as default
+	 */
 	export let onsetdefault;
+	
+	/**
+	 * Callback function called to show toast notifications
+	 * @type {function(ToastData): void}
+	 * @param {ToastData} toastData - Toast notification data
+	 */
 	export let ontoast;
 
+	/**
+	 * Gets the hex color value for an environment color name
+	 * @param {string} colorName - The environment color name (e.g., 'red', 'blue', 'green')
+	 * @returns {string} The hex color value (e.g., '#ef4444')
+	 */
 	function getEnvironmentColorValue(colorName) {
 		const environmentColors = [
 			{ name: 'Red', value: 'red', color: '#ef4444' },
@@ -28,7 +100,12 @@
 		return colorObj ? colorObj.color : '#3b82f6'; // Default to dodger blue
 	}
 
-	// Test connection function
+	/**
+	 * Tests the Elasticsearch connection and shows appropriate toast notifications
+	 * @async
+	 * @function
+	 * @returns {Promise<void>}
+	 */
 	async function testConnection() {
 		onteststart?.(connection.id);
 		
@@ -84,16 +161,31 @@
 		}
 	}
 
+	/**
+	 * Triggers the edit connection callback
+	 * @function
+	 * @returns {void}
+	 */
 	function editConnection() {
 		onedit?.(connection);
 	}
 
+	/**
+	 * Shows confirmation dialog and triggers delete connection callback if confirmed
+	 * @function
+	 * @returns {void}
+	 */
 	function deleteConnection() {
 		if (confirm('Are you sure you want to delete this connection?')) {
 			ondelete?.(connection.id);
 		}
 	}
 
+	/**
+	 * Triggers the set as default connection callback
+	 * @function
+	 * @returns {void}
+	 */
 	function setAsDefault() {
 		onsetdefault?.(connection.id);
 	}

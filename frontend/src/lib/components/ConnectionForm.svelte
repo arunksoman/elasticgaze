@@ -1,9 +1,47 @@
-<script>
+<script lang="js">
 	import { TestConnection } from '$lib/wailsjs/go/main/App.js';
 	
-	// Props
+	/**
+	 * @typedef {Object} Connection
+	 * @property {string|null} id - Unique connection identifier (null for new connections)
+	 * @property {string} name - Display name for the connection
+	 * @property {string} host - Elasticsearch host address
+	 * @property {number} port - Elasticsearch port number
+	 * @property {boolean} useSSL - Whether to use SSL/HTTPS
+	 * @property {('basic'|'apikey'|'none')} authType - Authentication type
+	 * @property {string} username - Username for basic auth
+	 * @property {string} password - Password for basic auth
+	 * @property {string} apiKey - API key for API key auth
+	 * @property {boolean} isDefault - Whether this is the default connection
+	 * @property {string} environmentColor - Environment color indicator
+	 */
+	
+	/**
+	 * @typedef {Object} ToastData
+	 * @property {string} message - Toast message to display
+	 * @property {('success'|'error'|'warning'|'info')} [type] - Toast type
+	 * @property {number} [duration] - Toast duration in milliseconds
+	 * @property {string} [animation] - Toast animation type
+	 * @property {string} [errorCode] - Error code for error toasts
+	 * @property {string} [errorDetails] - Error details for error toasts
+	 */
+	
+	/**
+	 * Controls whether the modal form is visible
+	 * @type {boolean}
+	 */
 	export let show = false;
+	
+	/**
+	 * Connection object being edited (null for new connections)
+	 * @type {Connection|null}
+	 */
 	export let editingConnection = null;
+	
+	/**
+	 * Form data object containing all connection fields
+	 * @type {Connection}
+	 */
 	export let formData = {
 		id: null,
 		name: '',
@@ -19,8 +57,24 @@
 	};
 	
 	// Event props (Svelte 5 way)
+	/**
+	 * Callback function called when the form should be closed
+	 * @type {function(): void}
+	 */
 	export let onclose;
+	
+	/**
+	 * Callback function called when the form should be saved
+	 * @type {function(Connection): void}
+	 * @param {Connection} formData - The form data to save
+	 */
 	export let onsave;
+	
+	/**
+	 * Callback function called to show toast notifications
+	 * @type {function(ToastData): void}
+	 * @param {ToastData} toastData - Toast notification data
+	 */
 	export let ontoast;
 
 	// Environment color options
@@ -44,6 +98,11 @@
 		apiKey: ''
 	};
 
+	/**
+	 * Validates the form data and populates the errors object
+	 * @function
+	 * @returns {boolean} True if form is valid, false otherwise
+	 */
 	function validateForm() {
 		errors = {
 			name: '',
@@ -84,11 +143,21 @@
 		return Object.values(errors).every(error => error === '');
 	}
 
+	/**
+	 * Gets the hex color value for an environment color name
+	 * @param {string} colorName - The environment color name
+	 * @returns {string} The hex color value
+	 */
 	function getEnvironmentColorValue(colorName) {
 		const colorObj = environmentColors.find(c => c.value === colorName);
 		return colorObj ? colorObj.color : '#3b82f6'; // Default to dodger blue
 	}
 
+	/**
+	 * Closes the form and resets errors
+	 * @function
+	 * @returns {void}
+	 */
 	function closeForm() {
 		errors = {
 			name: '',
@@ -101,6 +170,11 @@
 		onclose?.();
 	}
 
+	/**
+	 * Validates and saves the connection data
+	 * @function
+	 * @returns {void}
+	 */
 	function saveConnection() {
 		if (!validateForm()) {
 			return;
@@ -108,7 +182,12 @@
 		onsave?.(formData);
 	}
 
-	// Test connection from form data
+	/**
+	 * Tests the connection with current form data
+	 * @async
+	 * @function
+	 * @returns {Promise<void>}
+	 */
 	async function testFormConnection() {
 		if (!formData.host.trim()) {
 			ontoast?.({ message: 'Host is required for testing', type: 'error' });

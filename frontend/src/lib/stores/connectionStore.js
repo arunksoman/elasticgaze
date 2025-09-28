@@ -1,11 +1,37 @@
 import { writable } from 'svelte/store';
 
-// Create a writable store for connections
+/**
+ * @typedef {Object} Connection
+ * @property {string|null} id - Unique connection identifier (null for new connections)
+ * @property {string} name - Display name for the connection
+ * @property {string} host - Elasticsearch host address
+ * @property {number} port - Elasticsearch port number
+ * @property {boolean} useSSL - Whether to use SSL/HTTPS
+ * @property {('basic'|'apikey'|'none')} authType - Authentication type
+ * @property {string} username - Username for basic auth
+ * @property {string} password - Password for basic auth
+ * @property {string} apiKey - API key for API key auth
+ * @property {boolean} isDefault - Whether this is the default connection
+ * @property {string} environmentColor - Environment color indicator
+ */
+
+/**
+ * Svelte writable store containing array of connection objects
+ * @type {import('svelte/store').Writable<Array<Connection>>}
+ */
 export const connections = writable([]);
 
-// Connection management functions
+/**
+ * Connection management service providing CRUD operations and localStorage persistence
+ * @namespace connectionService
+ */
 export const connectionService = {
-	// Load connections from localStorage
+	/**
+	 * Loads connections from localStorage and updates the store
+	 * @memberof connectionService
+	 * @function
+	 * @returns {Array<Connection>} Array of loaded connections
+	 */
 	load() {
 		const stored = localStorage.getItem('elasticsearch-connections');
 		if (stored) {
@@ -16,13 +42,25 @@ export const connectionService = {
 		return [];
 	},
 
-	// Save connections to localStorage
+	/**
+	 * Saves connections array to localStorage and updates the store
+	 * @memberof connectionService
+	 * @function
+	 * @param {Array<Connection>} connectionsArray - Array of connection objects to save
+	 * @returns {void}
+	 */
 	save(connectionsArray) {
 		localStorage.setItem('elasticsearch-connections', JSON.stringify(connectionsArray));
 		connections.set(connectionsArray);
 	},
 
-	// Add a new connection
+	/**
+	 * Adds a new connection to the store and localStorage
+	 * @memberof connectionService
+	 * @function
+	 * @param {Connection} newConnection - New connection object to add
+	 * @returns {Promise<Connection>} Promise resolving to the added connection with generated ID
+	 */
 	add(newConnection) {
 		return new Promise((resolve) => {
 			connections.update(currentConnections => {
@@ -45,7 +83,13 @@ export const connectionService = {
 		});
 	},
 
-	// Update an existing connection
+	/**
+	 * Updates an existing connection in the store and localStorage
+	 * @memberof connectionService
+	 * @function
+	 * @param {Connection} updatedConnection - Updated connection object
+	 * @returns {Promise<Connection|null>} Promise resolving to updated connection or null if not found
+	 */
 	update(updatedConnection) {
 		return new Promise((resolve) => {
 			connections.update(currentConnections => {
@@ -71,7 +115,13 @@ export const connectionService = {
 		});
 	},
 
-	// Delete a connection
+	/**
+	 * Deletes a connection from the store and localStorage
+	 * @memberof connectionService
+	 * @function
+	 * @param {string} connectionId - ID of the connection to delete
+	 * @returns {Promise<boolean>} Promise resolving to true when deletion is complete
+	 */
 	delete(connectionId) {
 		return new Promise((resolve) => {
 			connections.update(currentConnections => {
@@ -83,7 +133,13 @@ export const connectionService = {
 		});
 	},
 
-	// Set a connection as default
+	/**
+	 * Sets a connection as the default connection
+	 * @memberof connectionService
+	 * @function
+	 * @param {string} connectionId - ID of the connection to set as default
+	 * @returns {Promise<boolean>} Promise resolving to true when update is complete
+	 */
 	setAsDefault(connectionId) {
 		return new Promise((resolve) => {
 			connections.update(currentConnections => {
@@ -98,7 +154,12 @@ export const connectionService = {
 		});
 	},
 
-	// Get default connection
+	/**
+	 * Gets the default connection from the store
+	 * @memberof connectionService
+	 * @function
+	 * @returns {Promise<Connection|null>} Promise resolving to default connection or null if none set
+	 */
 	getDefault() {
 		return new Promise((resolve) => {
 			connections.subscribe(currentConnections => {
@@ -108,7 +169,13 @@ export const connectionService = {
 		});
 	},
 
-	// Get connection by ID
+	/**
+	 * Gets a connection by its ID
+	 * @memberof connectionService
+	 * @function
+	 * @param {string} connectionId - ID of the connection to retrieve
+	 * @returns {Promise<Connection|null>} Promise resolving to connection object or null if not found
+	 */
 	getById(connectionId) {
 		return new Promise((resolve) => {
 			connections.subscribe(currentConnections => {
@@ -118,7 +185,12 @@ export const connectionService = {
 		});
 	},
 
-	// Reset form data to default values
+	/**
+	 * Returns default form data object for new connections
+	 * @memberof connectionService
+	 * @function
+	 * @returns {Connection} Default form data object
+	 */
 	getDefaultFormData() {
 		return {
 			id: null,
