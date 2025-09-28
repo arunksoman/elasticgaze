@@ -1,6 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import Toast from '$lib/Toast.svelte';
+	import { TestConnection } from '$lib/wailsjs/go/main/App.js';
 	
 	// Connection management state
 	let connections = [];
@@ -19,6 +21,18 @@
 		isDefault: false,
 		environmentColor: 'dodgerblue' // Default environment color
 	};
+	
+	// Toast state
+	let toastShow = false;
+	let toastMessage = '';
+	let toastType = 'success';
+	let toastDuration = 1500;
+	let toastAnimation = 'fade';
+	let toastErrorCode = '';
+	let toastErrorDetails = '';
+	
+	// Testing state
+	let testingConnectionId = null;
 	
 	// Environment color options
 	const environmentColors = [
@@ -157,11 +171,6 @@
 		saveConnections();
 	}
 	
-	function testConnection(connection) {
-		// Placeholder for connection testing
-		alert(`Testing connection to ${connection.name}...\nThis would attempt to connect to: ${connection.host}:${connection.port}`);
-	}
-	
 	function goBack() {
 		goto('/');
 	}
@@ -169,6 +178,109 @@
 	function getEnvironmentColorValue(colorName) {
 		const colorObj = environmentColors.find(c => c.value === colorName);
 		return colorObj ? colorObj.color : '#3b82f6'; // Default to dodger blue
+	}
+	
+	// Toast utility functions
+	function showToast(message, type = 'success', duration = 1500, animation = 'fade', errorCode = '', errorDetails = '') {
+		toastMessage = message;
+		toastType = type;
+		toastDuration = duration;
+		toastAnimation = animation;
+		toastErrorCode = errorCode;
+		toastErrorDetails = errorDetails;
+		toastShow = true;
+	}
+	
+	function hideToast() {
+		toastShow = false;
+		// Clear error details when hiding
+		toastErrorCode = '';
+		toastErrorDetails = '';
+	}
+	
+	// Test connection function
+	async function testConnection(connection) {
+		// Set testing state
+		testingConnectionId = connection.id;
+		
+		try {
+			// Prepare the test request
+			const testRequest = {
+				host: connection.host,
+				port: connection.port.toString(),
+				ssl_or_https: connection.useSSL,
+				authentication_method: connection.authType,
+				username: connection.authType === 'basic' ? connection.username : null,
+				password: connection.authType === 'basic' ? connection.password : null,
+				api_key: connection.authType === 'apikey' ? connection.apiKey : null
+			};
+			
+			// Call the backend test function
+			const response = await TestConnection(testRequest);
+			
+			if (response.success) {
+				let successMessage = 'Connection successful';
+				if (response.cluster_name) {
+					successMessage += ` (${response.cluster_name})`;
+				}
+				if (response.version) {
+					successMessage += ` - ES ${response.version}`;
+				}
+				showToast(successMessage, 'success', 2000, 'fade');
+			} else {
+				const errorMessage = response.message || 'Connection failed';
+				const errorCode = response.error_code || '';
+				const errorDetails = response.error_details || '';
+				showToast(errorMessage, 'error', 5000, 'slide', errorCode, errorDetails);
+			}
+		} catch (error) {
+			console.error('Test connection error:', error);
+			showToast('Connection test failed', 'error', 5000, 'slide', 'UNKNOWN_ERROR', error.message || 'Unknown error occurred');
+		} finally {
+			// Clear testing state
+			testingConnectionId = null;
+		}
+	}
+	
+	// Test connection from form data
+	async function testFormConnection() {
+		if (!formData.host.trim()) {
+			showToast('Host is required for testing', 'error');
+			return;
+		}
+		
+		try {
+			const testRequest = {
+				host: formData.host,
+				port: formData.port.toString(),
+				ssl_or_https: formData.useSSL,
+				authentication_method: formData.authType,
+				username: formData.authType === 'basic' ? formData.username : null,
+				password: formData.authType === 'basic' ? formData.password : null,
+				api_key: formData.authType === 'apikey' ? formData.apiKey : null
+			};
+			
+			const response = await TestConnection(testRequest);
+			
+			if (response.success) {
+				let successMessage = 'Connection successful';
+				if (response.cluster_name) {
+					successMessage += ` (${response.cluster_name})`;
+				}
+				if (response.version) {
+					successMessage += ` - ES ${response.version}`;
+				}
+				showToast(successMessage, 'success', 2000, 'fade');
+			} else {
+				const errorMessage = response.message || 'Connection failed';
+				const errorCode = response.error_code || '';
+				const errorDetails = response.error_details || '';
+				showToast(errorMessage, 'error', 5000, 'slide', errorCode, errorDetails);
+			}
+		} catch (error) {
+			console.error('Test connection error:', error);
+			showToast('Connection test failed', 'error', 5000, 'slide', 'UNKNOWN_ERROR', error.message || 'Unknown error occurred');
+		}
 	}
 </script>
 
@@ -178,6 +290,7 @@
 			onclick={goBack}
 			class="p-2 rounded-md theme-bg-secondary theme-text-primary hover:theme-bg-tertiary transition-colors"
 			title="Back to Home"
+			aria-label="Back to Home"
 		>
 			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -235,10 +348,19 @@
 						<div class="flex items-center gap-2">
 							<button 
 								onclick={() => testConnection(connection)}
-								class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+								disabled={testingConnectionId === connection.id}
+								class="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1"
 								title="Test Connection"
 							>
-								Test
+								{#if testingConnectionId === connection.id}
+									<svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+									</svg>
+									Testing...
+								{:else}
+									Test
+								{/if}
 							</button>
 							{#if !connection.isDefault}
 								<button 
@@ -293,8 +415,8 @@
 				
 				<form onsubmit={(e) => { e.preventDefault(); saveConnection(); }} class="space-y-2">
 					<!-- Environment Color Selector -->
-					<div>
-						<label class="block text-sm font-medium theme-text-primary mb-2">Environment Color</label>
+					<fieldset>
+						<legend class="block text-sm font-medium theme-text-primary mb-2">Environment Color</legend>
 						<div class="flex gap-2 flex-wrap">
 							{#each environmentColors as colorOption}
 								<button
@@ -307,7 +429,7 @@
 								></button>
 							{/each}
 						</div>
-					</div>
+					</fieldset>
 					
 					<!-- Connection Name -->
 					<div>
@@ -442,23 +564,47 @@
 					</div>
 					
 					<!-- Form Actions -->
-					<div class="flex justify-end gap-2 pt-3">
+					<div class="flex justify-between gap-2 pt-3">
 						<button 
 							type="button"
-							onclick={closeForm}
-							class="px-3 py-1.5 border theme-border theme-text-primary rounded-md hover:theme-bg-secondary transition-colors text-sm"
+							onclick={testFormConnection}
+							class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-sm flex items-center gap-1"
 						>
-							Cancel
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+							Test Connection
 						</button>
-						<button 
-							type="submit"
-							class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-sm"
-						>
-							{editingConnection ? 'Update' : 'Save'} Connection
-						</button>
+						<div class="flex gap-2">
+							<button 
+								type="button"
+								onclick={closeForm}
+								class="px-3 py-1.5 border theme-border theme-text-primary rounded-md hover:theme-bg-secondary transition-colors text-sm"
+							>
+								Cancel
+							</button>
+							<button 
+								type="submit"
+								class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-sm"
+							>
+								{editingConnection ? 'Update' : 'Save'} Connection
+							</button>
+						</div>
 					</div>
 				</form>
 			</div>
 		</div>
 	</div>
 {/if}
+
+<!-- Toast Component -->
+<Toast 
+	bind:show={toastShow}
+	message={toastMessage}
+	type={toastType}
+	duration={toastDuration}
+	animation={toastAnimation}
+	errorCode={toastErrorCode}
+	errorDetails={toastErrorDetails}
+	on:hide={hideToast}
+/>
