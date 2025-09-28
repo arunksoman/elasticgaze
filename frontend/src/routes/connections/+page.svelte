@@ -21,6 +21,7 @@
 	import ConnectionsList from '$lib/components/ConnectionsList.svelte';
 	import ConnectionForm from '$lib/components/ConnectionForm.svelte';
 	import { connections, connectionService } from '$lib/stores/connectionStore.js';
+	import { CreateConfig, UpdateConfig, GetAllConfigs, DeleteConfig } from '$lib/wailsjs/go/main/App.js';
 	
 	/**
 	 * @typedef {Object} Connection
@@ -41,10 +42,10 @@
 	 * @typedef {Object} ToastData
 	 * @property {string} message - Toast message text
 	 * @property {('success'|'error'|'info'|'warning')} type - Toast type for styling
-	 * @property {number} duration - Auto-hide duration in milliseconds
-	 * @property {('fade'|'slide')} animation - Animation type
-	 * @property {string} errorCode - Optional error code for error toasts
-	 * @property {string} errorDetails - Detailed error information
+	 * @property {number} [duration] - Auto-hide duration in milliseconds
+	 * @property {('fade'|'slide')} [animation] - Animation type
+	 * @property {string} [errorCode] - Optional error code for error toasts
+	 * @property {string} [errorDetails] - Detailed error information
 	 */
 	
 	// ===== COMPONENT STATE =====
@@ -93,10 +94,26 @@
 	});
 	
 	/**
-	 * Initialize component by loading saved connections
+	 * Loads connections from Go backend API and updates the store
+	 */
+	async function loadConnectionsFromBackend() {
+		try {
+			const configs = await GetAllConfigs();
+			const mappedConnections = configs.map(mapConfigToConnection);
+			connections.set(mappedConnections);
+		} catch (error) {
+			console.error('Error loading connections from backend:', error);
+			showToast('Failed to load connections from database', 'error', 3000);
+			// Fallback to localStorage
+			connectionService.load();
+		}
+	}
+	
+	/**
+	 * Initialize component by loading saved connections from backend
 	 */
 	onMount(() => {
-		connectionService.load();
+		loadConnectionsFromBackend();
 	});
 
 	// Cleanup subscription on destroy
@@ -110,6 +127,65 @@
 	});
 
 	// ===== EVENT HANDLERS =====
+	
+	/**
+	 * Converts frontend Connection object to backend CreateConfigRequest format
+	 * @param {Connection} connection - Frontend connection object
+	 * @returns {Object} Backend CreateConfigRequest object
+	 */
+	function mapConnectionToCreateRequest(connection) {
+		return {
+			connection_name: connection.name,
+			env_indicator_color: connection.environmentColor,
+			host: connection.host,
+			port: connection.port.toString(),
+			ssl_or_https: connection.useSSL,
+			authentication_method: connection.authType,
+			username: connection.authType === 'basic' ? connection.username || null : null,
+			password: connection.authType === 'basic' ? connection.password || null : null,
+			set_as_default: connection.isDefault
+		};
+	}
+	
+	/**
+	 * Converts frontend Connection object to backend UpdateConfigRequest format
+	 * @param {Connection} connection - Frontend connection object
+	 * @returns {Object} Backend UpdateConfigRequest object
+	 */
+	function mapConnectionToUpdateRequest(connection) {
+		return {
+			connection_name: connection.name,
+			env_indicator_color: connection.environmentColor,
+			host: connection.host,
+			port: connection.port.toString(),
+			ssl_or_https: connection.useSSL,
+			authentication_method: connection.authType,
+			username: connection.authType === 'basic' ? connection.username || null : null,
+			password: connection.authType === 'basic' ? connection.password || null : null,
+			set_as_default: connection.isDefault
+		};
+	}
+	
+	/**
+	 * Converts backend Config object to frontend Connection format
+	 * @param {Object} config - Backend config object
+	 * @returns {Connection} Frontend connection object
+	 */
+	function mapConfigToConnection(config) {
+		return {
+			id: config.id.toString(),
+			name: config.connection_name,
+			host: config.host,
+			port: parseInt(config.port),
+			useSSL: config.ssl_or_https,
+			authType: config.authentication_method,
+			username: config.username || '',
+			password: config.password || '',
+			apiKey: '', // API key not supported in backend yet
+			isDefault: config.set_as_default,
+			environmentColor: config.env_indicator_color
+		};
+	}
 	
 	/**
 	 * Opens the connection form modal for creating or editing a connection
@@ -134,43 +210,116 @@
 	}
 
 	/**
-	 * Saves a connection (creates new or updates existing)
+	 * Saves a connection (creates new or updates existing) using Go backend API
 	 * @param {Connection} connectionData - Connection data to save
 	 */
 	async function saveConnection(connectionData) {
 		try {
+			let result;
+			
 			if (editingConnection) {
-				await connectionService.update(connectionData);
+				// Update existing connection
+				const updateRequest = mapConnectionToUpdateRequest(connectionData);
+				result = await UpdateConfig(parseInt(editingConnection.id), updateRequest);
 			} else {
-				await connectionService.add(connectionData);
+				// Create new connection
+				const createRequest = mapConnectionToCreateRequest(connectionData);
+				result = await CreateConfig(createRequest);
 			}
+			
+			// Success - close form and reload connections
 			closeForm();
+			await loadConnectionsFromBackend();
+			
+			// Show success toast
+			const action = editingConnection ? 'updated' : 'created';
+			showToast(`Connection successfully ${action}`, 'success', 2000);
+			
 		} catch (error) {
 			console.error('Error saving connection:', error);
+			
+			// Handle validation errors - extract meaningful error messages
+			let errorMessage = 'Failed to save connection. Please try again.';
+			
+			if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+				errorMessage = error.message;
+			} else if (typeof error === 'string') {
+				errorMessage = error;
+			} else if (error && typeof error.toString === 'function') {
+				errorMessage = error.toString();
+			}
+			
+			// Check for specific validation errors and provide user-friendly messages
+			if (errorMessage.includes('only one default connection is allowed')) {
+				showToast('Only one default connection is allowed. Please uncheck "Set as default" or edit the existing default connection.', 'error', 5000, 'slide');
+			} else if (errorMessage.includes('validation error')) {
+				showToast('Please check your connection details and try again.', 'error', 3000);
+			} else if (errorMessage.includes('connection name is required')) {
+				showToast('Connection name is required. Please enter a name for your connection.', 'error', 3000);
+			} else if (errorMessage.includes('host is required')) {
+				showToast('Host is required. Please enter the Elasticsearch host address.', 'error', 3000);
+			} else {
+				// Show the actual error message from the backend
+				showToast(`Failed to save connection: ${errorMessage}`, 'error', 4000);
+			}
 		}
 	}
 
 	/**
-	 * Deletes a connection by ID
+	 * Deletes a connection by ID using Go backend API
 	 * @param {string} connectionId - ID of connection to delete
 	 */
 	async function deleteConnection(connectionId) {
 		try {
-			await connectionService.delete(connectionId);
+			await DeleteConfig(parseInt(connectionId));
+			await loadConnectionsFromBackend();
+			showToast('Connection deleted successfully', 'success', 2000);
 		} catch (error) {
 			console.error('Error deleting connection:', error);
+			showToast('Failed to delete connection', 'error', 3000);
 		}
 	}
 
 	/**
-	 * Sets a connection as the default connection
+	 * Sets a connection as the default connection using Go backend API
 	 * @param {string} connectionId - ID of connection to set as default
 	 */
 	async function setAsDefault(connectionId) {
 		try {
-			await connectionService.setAsDefault(connectionId);
+			// Get the current connection
+			const connection = connectionsArray.find(c => c.id === connectionId);
+			if (!connection) {
+				throw new Error('Connection not found');
+			}
+			
+			// Update the connection to set as default
+			const updateRequest = {
+				...mapConnectionToUpdateRequest(connection),
+				set_as_default: true
+			};
+			
+			await UpdateConfig(parseInt(connectionId), updateRequest);
+			await loadConnectionsFromBackend();
+			showToast('Default connection updated successfully', 'success', 2000);
 		} catch (error) {
 			console.error('Error setting default connection:', error);
+			
+			// Extract meaningful error message
+			let errorMessage = 'Failed to set default connection';
+			if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+				errorMessage = error.message;
+			} else if (typeof error === 'string') {
+				errorMessage = error;
+			} else if (error && typeof error.toString === 'function') {
+				errorMessage = error.toString();
+			}
+			
+			// Handle the case where trying to set multiple defaults
+			if (errorMessage.includes('only one default connection is allowed')) {
+				showToast('Only one default connection is allowed. Another connection is already set as default.', 'error', 4000, 'slide');
+			} else {
+				showToast(`Failed to set default connection: ${errorMessage}`, 'error', 3000);
+			}
 		}
 	}
 

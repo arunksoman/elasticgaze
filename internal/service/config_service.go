@@ -24,6 +24,17 @@ func (s *ConfigService) CreateConfig(req *models.CreateConfigRequest) (*models.C
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
+	// Check if trying to create a default connection when one already exists
+	if req.SetAsDefault {
+		hasDefault, err := s.repo.HasDefaultConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to check for existing default: %w", err)
+		}
+		if hasDefault {
+			return nil, models.ErrMultipleDefaultsNotAllowed
+		}
+	}
+
 	// Create the configuration
 	config, err := s.repo.Create(req)
 	if err != nil {
@@ -74,9 +85,23 @@ func (s *ConfigService) UpdateConfig(id int, req *models.UpdateConfigRequest) (*
 	}
 
 	// Check if config exists
-	_, err := s.repo.GetByID(id)
+	existingConfig, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, fmt.Errorf("config not found: %w", err)
+	}
+
+	// Check if trying to set as default when another default already exists
+	if req.SetAsDefault != nil && *req.SetAsDefault {
+		// Only validate if this config is not already the default
+		if !existingConfig.SetAsDefault {
+			hasDefault, err := s.repo.HasDefaultConfig()
+			if err != nil {
+				return nil, fmt.Errorf("failed to check for existing default: %w", err)
+			}
+			if hasDefault {
+				return nil, models.ErrMultipleDefaultsNotAllowed
+			}
+		}
 	}
 
 	config, err := s.repo.Update(id, req)

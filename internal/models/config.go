@@ -55,8 +55,9 @@ func (c *CreateConfigRequest) Validate() error {
 
 // Common validation errors
 var (
-	ErrConnectionNameRequired = &ValidationError{Field: "connection_name", Message: "connection name is required"}
-	ErrHostRequired           = &ValidationError{Field: "host", Message: "host is required"}
+	ErrConnectionNameRequired     = &ValidationError{Field: "connection_name", Message: "connection name is required"}
+	ErrHostRequired               = &ValidationError{Field: "host", Message: "host is required"}
+	ErrMultipleDefaultsNotAllowed = &ValidationError{Field: "set_as_default", Message: "only one default connection is allowed"}
 )
 
 // ValidationError represents a validation error
