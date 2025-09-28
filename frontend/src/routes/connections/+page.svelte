@@ -311,8 +311,9 @@
 			<p class="theme-text-secondary mb-4">Add your first Elasticsearch connection to get started.</p>
 			<button 
 				onclick={() => openForm()}
-				class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+				class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2"
 			>
+				<img src="/icons/create.svg" alt="" class="w-4 h-4" style="filter: brightness(0) invert(1);" />
 				Add Connection
 			</button>
 		</div>
@@ -373,16 +374,18 @@
 							{/if}
 							<button 
 								onclick={() => openForm(connection)}
-								class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+								class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1"
 								title="Edit Connection"
 							>
+								<img src="/icons/edit.svg" alt="" class="w-3 h-3" style="filter: brightness(0) invert(1);" />
 								Edit
 							</button>
 							<button 
 								onclick={() => deleteConnection(connection.id)}
-								class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+								class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1"
 								title="Delete Connection"
 							>
+								<img src="/icons/delete.svg" alt="" class="w-3 h-3" style="filter: brightness(0) invert(1);" />
 								Delete
 							</button>
 						</div>
@@ -570,9 +573,7 @@
 							onclick={testFormConnection}
 							class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-sm flex items-center gap-1"
 						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-							</svg>
+							<img src="/icons/test.svg" alt="" class="w-4 h-4" style="filter: brightness(0) invert(1);" />
 							Test Connection
 						</button>
 						<div class="flex gap-2">
@@ -585,8 +586,9 @@
 							</button>
 							<button 
 								type="submit"
-								class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-sm"
+								class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-sm flex items-center gap-1"
 							>
+								<img src="/icons/{editingConnection ? 'edit' : 'create'}.svg" alt="" class="w-4 h-4" style="filter: brightness(0) invert(1);" />
 								{editingConnection ? 'Update' : 'Save'} Connection
 							</button>
 						</div>
