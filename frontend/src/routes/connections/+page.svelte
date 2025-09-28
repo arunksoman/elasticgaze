@@ -16,8 +16,20 @@
 		useSSL: false,
 		apiKey: '',
 		authType: 'basic', // 'basic', 'apikey', 'none'
-		isDefault: false
+		isDefault: false,
+		environmentColor: 'dodgerblue' // Default environment color
 	};
+	
+	// Environment color options
+	const environmentColors = [
+		{ name: 'Red', value: 'red', color: '#ef4444' },
+		{ name: 'Orange', value: 'orange', color: '#f97316' },
+		{ name: 'Yellow', value: 'yellow', color: '#eab308' },
+		{ name: 'Green', value: 'green', color: '#22c55e' },
+		{ name: 'Dodger Blue', value: 'dodgerblue', color: '#3b82f6' },
+		{ name: 'Purple', value: 'purple', color: '#a855f7' },
+		{ name: 'Pink', value: 'pink', color: '#ec4899' }
+	];
 	
 	// Form validation
 	let errors = {};
@@ -86,7 +98,8 @@
 				useSSL: false,
 				apiKey: '',
 				authType: 'basic',
-				isDefault: false
+				isDefault: false,
+				environmentColor: 'dodgerblue'
 			};
 		}
 		showForm = true;
@@ -152,6 +165,11 @@
 	function goBack() {
 		goto('/');
 	}
+	
+	function getEnvironmentColorValue(colorName) {
+		const colorObj = environmentColors.find(c => c.value === colorName);
+		return colorObj ? colorObj.color : '#3b82f6'; // Default to dodger blue
+	}
 </script>
 
 <div class="p-6">
@@ -192,6 +210,12 @@
 					<div class="flex items-center justify-between">
 						<div class="flex-1">
 							<div class="flex items-center gap-3 mb-2">
+								<!-- Environment Color Indicator -->
+								<div 
+									class="w-3 h-3 rounded-full flex-shrink-0" 
+									style="background-color: {getEnvironmentColorValue(connection.environmentColor || 'dodgerblue')}"
+									title="Environment: {connection.environmentColor || 'dodgerblue'}"
+								></div>
 								<h3 class="text-lg font-medium theme-text-primary">{connection.name}</h3>
 								{#if connection.isDefault}
 									<span class="bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 text-xs px-2 py-1 rounded-full font-medium">
@@ -249,8 +273,8 @@
 
 <!-- Connection Form Modal -->
 {#if showForm}
-	<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-		<div class="theme-bg-primary rounded-lg shadow-xl max-w-2xl w-full max-h-[580px] overflow-y-auto">
+	<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 pt-16">
+		<div class="theme-bg-primary rounded-lg shadow-xl max-w-2xl w-full max-h-[550px] overflow-y-auto" style="border-top: 5px solid {getEnvironmentColorValue(formData.environmentColor)};">
 			<div class="p-4">
 				<div class="flex items-center justify-between mb-4">
 					<h2 class="text-lg font-medium theme-text-primary">
@@ -259,6 +283,7 @@
 					<button 
 						onclick={closeForm}
 						class="p-1.5 rounded-md theme-text-secondary hover:theme-text-primary transition-colors"
+						aria-label="Close form"
 					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -266,7 +291,24 @@
 					</button>
 				</div>
 				
-				<form onsubmit={(e) => { e.preventDefault(); saveConnection(); }} class="space-y-3">
+				<form onsubmit={(e) => { e.preventDefault(); saveConnection(); }} class="space-y-2">
+					<!-- Environment Color Selector -->
+					<div>
+						<label class="block text-sm font-medium theme-text-primary mb-2">Environment Color</label>
+						<div class="flex gap-2 flex-wrap">
+							{#each environmentColors as colorOption}
+								<button
+									type="button"
+									onclick={() => formData.environmentColor = colorOption.value}
+									class="w-4 h-4 rounded-full border transition-all duration-200 hover:scale-125 {formData.environmentColor === colorOption.value ? 'border-gray-400 shadow-lg' : 'border-gray-200 dark:border-gray-600'}"
+									style="background-color: {colorOption.color};"
+									title={colorOption.name}
+									aria-label="Select {colorOption.name} color"
+								></button>
+							{/each}
+						</div>
+					</div>
+					
 					<!-- Connection Name -->
 					<div>
 						<label for="name" class="block text-sm font-medium theme-text-primary mb-1">Connection Name</label>
@@ -274,7 +316,7 @@
 							type="text" 
 							id="name"
 							bind:value={formData.name}
-							class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary rounded-md text-sm"
+							class="w-full border theme-border p-1.5 theme-bg-tertiary theme-text-primary rounded-md text-sm"
 							placeholder="Production ES Cluster"
 						/>
 						{#if errors.name}
@@ -283,14 +325,14 @@
 					</div>
 					
 					<!-- Host and Port -->
-					<div class="grid grid-cols-3 gap-3">
+					<div class="grid grid-cols-3 gap-2">
 						<div class="col-span-2">
 							<label for="host" class="block text-sm font-medium theme-text-primary mb-1">Host</label>
 							<input 
 								type="text" 
 								id="host"
 								bind:value={formData.host}
-								class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary rounded-md text-sm"
+								class="w-full border theme-border p-1.5 theme-bg-tertiary theme-text-primary rounded-md text-sm"
 								placeholder="localhost or https://example.com"
 							/>
 							{#if errors.host}
@@ -303,7 +345,7 @@
 								type="number" 
 								id="port"
 								bind:value={formData.port}
-								class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary rounded-md text-sm"
+								class="w-full border theme-border p-1.5 theme-bg-tertiary theme-text-primary rounded-md text-sm"
 								placeholder="9200"
 								min="1"
 								max="65535"
@@ -331,7 +373,7 @@
 						<select 
 							id="authType"
 							bind:value={formData.authType}
-							class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary rounded-md text-sm"
+							class="w-full border theme-border p-1.5 theme-bg-tertiary theme-text-primary rounded-md text-sm"
 						>
 							<option value="none">No Authentication</option>
 							<option value="basic">Basic Auth (Username/Password)</option>
@@ -341,14 +383,14 @@
 					
 					<!-- Basic Auth Fields -->
 					{#if formData.authType === 'basic'}
-						<div class="grid grid-cols-2 gap-3">
+						<div class="grid grid-cols-2 gap-2">
 							<div>
 								<label for="username" class="block text-sm font-medium theme-text-primary mb-1">Username</label>
 								<input 
 									type="text" 
 									id="username"
 									bind:value={formData.username}
-									class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary rounded-md text-sm"
+									class="w-full border theme-border p-1.5 theme-bg-tertiary theme-text-primary rounded-md text-sm"
 									placeholder="elastic"
 								/>
 								{#if errors.username}
@@ -361,7 +403,7 @@
 									type="password" 
 									id="password"
 									bind:value={formData.password}
-									class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary rounded-md text-sm"
+									class="w-full border theme-border p-1.5 theme-bg-tertiary theme-text-primary rounded-md text-sm"
 									placeholder="••••••••"
 								/>
 								{#if errors.password}
@@ -379,7 +421,7 @@
 								type="password" 
 								id="apiKey"
 								bind:value={formData.apiKey}
-								class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary rounded-md text-sm"
+								class="w-full border theme-border p-1.5 theme-bg-tertiary theme-text-primary rounded-md text-sm"
 								placeholder="Enter your API key"
 							/>
 							{#if errors.apiKey}
@@ -400,17 +442,17 @@
 					</div>
 					
 					<!-- Form Actions -->
-					<div class="flex justify-end gap-3 pt-3">
+					<div class="flex justify-end gap-2 pt-3">
 						<button 
 							type="button"
 							onclick={closeForm}
-							class="px-3 py-2 border theme-border theme-text-primary rounded-md hover:theme-bg-secondary transition-colors text-sm"
+							class="px-3 py-1.5 border theme-border theme-text-primary rounded-md hover:theme-bg-secondary transition-colors text-sm"
 						>
 							Cancel
 						</button>
 						<button 
 							type="submit"
-							class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm"
+							class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-sm"
 						>
 							{editingConnection ? 'Update' : 'Save'} Connection
 						</button>
