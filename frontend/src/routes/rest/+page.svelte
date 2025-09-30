@@ -70,9 +70,9 @@
 			<option value="POST" class="text-orange-500 font-semibold">POST</option>
 			<option value="PUT" class="text-blue-500 font-semibold">PUT</option>
 			<option value="DELETE" class="text-red-500 font-semibold">DELETE</option>
-			<!-- <option value="PATCH" class="text-purple-500 font-semibold">PATCH</option> -->
-			<!-- <option value="HEAD" class="text-gray-500 font-semibold">HEAD</option> -->
-			<!-- <option value="OPTIONS" class="text-indigo-500 font-semibold">OPTIONS</option> -->
+			<option value="PATCH" class="text-purple-500 font-semibold">PATCH</option>
+			<option value="HEAD" class="text-gray-500 font-semibold">HEAD</option>
+			<option value="OPTIONS" class="text-indigo-500 font-semibold">OPTIONS</option>
 		</select>
 		<input 
 			type="text" 

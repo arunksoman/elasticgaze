@@ -126,6 +126,7 @@
 	const SearchIcon = '/icons/search.svg';
 	const RestIcon = '/icons/rest.svg';
 	const SnapshotIcon = '/icons/snapshot.svg';
+	const AboutIcon = '/icons/about.svg';
 	const SettingsIcon = '/icons/settings.svg';
 
 	let expanded = $state(false);
@@ -142,7 +143,8 @@
 	  { name: 'Indices', icon: IndicesIcon, route: '/indices' },
 	  { name: 'Search', icon: SearchIcon, route: '/search' },
 	  { name: 'REST', icon: RestIcon, route: '/rest' },
-	  { name: 'Snapshot', icon: SnapshotIcon, route: '/snapshot' }
+	  { name: 'Snapshot', icon: SnapshotIcon, route: '/snapshot' },
+	  { name: 'About', icon: AboutIcon, route: '/about' }
 	];
 
 	const activeIndex = $derived(
