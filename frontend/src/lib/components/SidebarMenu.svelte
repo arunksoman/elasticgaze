@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { theme } from '$lib/theme.js';
+	import { onDestroy } from 'svelte';
 
 	let { currentTheme = $bindable('light') } = $props();
 
@@ -19,6 +20,7 @@
 	let expanded = $state(false);
 	let hoverIndex = null;
 	let showSettings = $state(false);
+	let hoverTimeout = null;
 
 	const menu = [
 		{ name: 'Home', icon: HomeIcon, route: '/' },
@@ -44,13 +46,46 @@
 	}
 
 	function handleHover(idx) {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+			hoverTimeout = null;
+		}
 		hoverIndex = idx;
 		expanded = true;
 	}
 
 	function handleMouseLeave() {
-		hoverIndex = null;
-		expanded = false;
+		// Don't immediately collapse, use a delay to prevent flickering
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
+		
+		hoverTimeout = setTimeout(() => {
+			hoverIndex = null;
+			expanded = false;
+			hoverTimeout = null;
+		}, 300); // 300ms delay before collapsing
+	}
+
+	function handleSidebarEnter() {
+		// Clear any pending collapse when entering sidebar area
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+			hoverTimeout = null;
+		}
+	}
+
+	function handleSidebarLeave() {
+		// Only collapse when leaving the entire sidebar
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
+		
+		hoverTimeout = setTimeout(() => {
+			hoverIndex = null;
+			expanded = false;
+			hoverTimeout = null;
+		}, 200); // Shorter delay when leaving entire sidebar
 	}
 
 	function openSettings() {
@@ -81,10 +116,21 @@
 		}
 		closeSettings();
 	}
+
+	// Cleanup timeout on component destroy
+	onDestroy(() => {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
+	});
 </script>
 
 <!-- Sidebar -->
-<nav class={`flex flex-col h-full py-4 px-2 theme-bg-secondary shadow-lg transition-all duration-300 ${expanded ? 'w-56' : 'w-16'} relative z-10`}>
+<nav 
+	class={`flex flex-col h-full py-4 px-2 theme-bg-secondary shadow-lg transition-all duration-300 ${expanded ? 'w-56' : 'w-16'} relative z-10`}
+	onmouseenter={handleSidebarEnter}
+	onmouseleave={handleSidebarLeave}
+>
 	<div class="flex-1">
 		<!-- Hamburger -->
 		<button
@@ -102,7 +148,6 @@
 						class={`relative flex items-center w-full h-12 mb-1 rounded-lg transition-colors group theme-hover ${activeIndex === idx ? 'text-purple-600' : 'theme-text-primary'}`}
 						onclick={() => handleMenuClick(idx)}
 						onmouseenter={() => handleHover(idx)}
-						onmouseleave={handleMouseLeave}
 					>
 						{#if activeIndex === idx}
 							<div class="absolute top-0 left-0 right-0 h-0.5 bg-purple-600"></div>
