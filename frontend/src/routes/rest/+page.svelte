@@ -15,9 +15,9 @@
 			'POST': 'text-orange-500',
 			'PUT': 'text-blue-500',
 			'DELETE': 'text-red-500',
-			// 'PATCH': 'text-purple-500',
-			// 'HEAD': 'text-gray-500',
-			// 'OPTIONS': 'text-indigo-500'
+			'PATCH': 'text-purple-500',
+			'HEAD': 'text-gray-500',
+			'OPTIONS': 'text-indigo-500'
 		};
 		return colors[methodName] || 'text-gray-400';
 	}
@@ -94,8 +94,16 @@
 		<MonacoEditor 
 			bind:value={requestBody} 
 			language="json" 
-			height="200px"
+			height="250px"
 			theme={$theme}
+			fontSize={13}
+			tabSize={2}
+			wordWrap="on"
+			formatOnPaste={true}
+			formatOnType={false}
+			folding={true}
+			showFoldingControls="always"
+			placeholder="Enter your JSON request body here..."
 		/>
 	</div>
 	
@@ -106,9 +114,18 @@
 			<MonacoEditor 
 				bind:value={responseData} 
 				language="json" 
-				height="300px"
+				height="400px"
 				readOnly={true}
 				theme={$theme}
+				fontSize={12}
+				tabSize={2}
+				wordWrap="on"
+				lineNumbers="on"
+				minimap={true}
+				formatOnPaste={false}
+				formatOnType={false}
+				folding={true}
+				showFoldingControls="always"
 			/>
 		</div>
 	{/if}
