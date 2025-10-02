@@ -21,6 +21,7 @@
 	import ConnectionsList from '$lib/components/ConnectionsList.svelte';
 	import ConnectionForm from '$lib/components/ConnectionForm.svelte';
 	import { connections, connectionService } from '$lib/stores/connectionStore.js';
+	import { refreshConnectionStatus } from '$lib/stores/connectionWarningStore.js';
 	import { CreateConfig, UpdateConfig, GetAllConfigs, DeleteConfig } from '$lib/wailsjs/go/main/App.js';
 	
 	/**
@@ -231,6 +232,9 @@
 			closeForm();
 			await loadConnectionsFromBackend();
 			
+			// Refresh connection warning status
+			await refreshConnectionStatus();
+			
 			// Show success toast
 			const action = editingConnection ? 'updated' : 'created';
 			showToast(`Connection successfully ${action}`, 'success', 2000);
@@ -273,6 +277,10 @@
 		try {
 			await DeleteConfig(parseInt(connectionId));
 			await loadConnectionsFromBackend();
+			
+			// Refresh connection warning status
+			await refreshConnectionStatus();
+			
 			showToast('Connection deleted successfully', 'success', 2000);
 		} catch (error) {
 			console.error('Error deleting connection:', error);
@@ -300,6 +308,10 @@
 			
 			await UpdateConfig(parseInt(connectionId), updateRequest);
 			await loadConnectionsFromBackend();
+			
+			// Refresh connection warning status
+			await refreshConnectionStatus();
+			
 			showToast('Default connection updated successfully', 'success', 2000);
 		} catch (error) {
 			console.error('Error setting default connection:', error);

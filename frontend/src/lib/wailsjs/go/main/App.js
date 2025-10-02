@@ -30,6 +30,10 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function HasDefaultConfig() {
+  return window['go']['main']['App']['HasDefaultConfig']();
+}
+
 export function TestConnection(arg1) {
   return window['go']['main']['App']['TestConnection'](arg1);
 }

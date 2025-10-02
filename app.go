@@ -120,3 +120,8 @@ func (a *App) DeleteConfig(id int) error {
 func (a *App) TestConnection(req *models.TestConnectionRequest) (*models.TestConnectionResponse, error) {
 	return a.esService.TestConnection(req)
 }
+
+// HasDefaultConfig checks if there is a default connection configured
+func (a *App) HasDefaultConfig() (bool, error) {
+	return a.configService.HasDefaultConfig()
+}

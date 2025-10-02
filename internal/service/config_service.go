@@ -137,3 +137,12 @@ func (s *ConfigService) DeleteConfig(id int) error {
 
 	return nil
 }
+
+// HasDefaultConfig checks if there is a default connection configured
+func (s *ConfigService) HasDefaultConfig() (bool, error) {
+	hasDefault, err := s.repo.HasDefaultConfig()
+	if err != nil {
+		return false, fmt.Errorf("failed to check for default config: %w", err)
+	}
+	return hasDefault, nil
+}

@@ -16,6 +16,8 @@ export function GetDefaultConfig():Promise<models.Config>;
 
 export function Greet(arg1:string):Promise<string>;
 
+export function HasDefaultConfig():Promise<boolean>;
+
 export function TestConnection(arg1:models.TestConnectionRequest):Promise<models.TestConnectionResponse>;
 
 export function UpdateConfig(arg1:number,arg2:models.UpdateConfigRequest):Promise<models.Config>;

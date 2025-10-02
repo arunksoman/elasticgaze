@@ -2,22 +2,82 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { theme } from '$lib/theme.js';
 	import WindowControls from '$lib/components/WindowControls.svelte';
 	import SidebarMenu from '$lib/components/SidebarMenu.svelte';
+	import ConnectionWarning from '$lib/components/ConnectionWarning.svelte';
+	import { 
+		connectionWarningStatus, 
+		updateConnectionWarningStatus, 
+		triggerConnectionCheck 
+	} from '$lib/stores/connectionWarningStore.js';
 	// Wails runtime controls
 	import {
 		WindowIsMaximised,
 		LogInfo
 	} from '$lib/wailsjs/runtime/runtime';
+	import { GetDefaultConfig } from '$lib/wailsjs/go/main/App';
 	
 	let { children } = $props();
 	
 	let isMax = $state(false);
 	let currentTheme = $state('light');
+	let lastCheckedPath = $state('');
+	
+	// Pages where the connection warning should not be shown
+	const excludedPages = ['/about', '/connections'];
+	
+	// Subscribe to connection status from store
+	const connectionStatus = $derived($connectionWarningStatus);
+	
+	// Check if current page should show the connection warning
+	const shouldShowWarning = $derived(() => {
+		if (connectionStatus.isChecking || connectionStatus.hasDefault) return false;
+		return !excludedPages.includes(page.url.pathname);
+	});
+	
+	// Reactive check when page changes
+	$effect(() => {
+		const currentPath = page.url.pathname;
+		
+		// Check connection when:
+		// 1. Coming from connections page to any other page
+		// 2. Initial load
+		// 3. Navigating to non-excluded pages
+		if (
+			lastCheckedPath === '/connections' && currentPath !== '/connections' ||
+			lastCheckedPath === '' ||
+			(!excludedPages.includes(currentPath) && hasWails())
+		) {
+			checkDefaultConnection();
+		}
+		
+		lastCheckedPath = currentPath;
+	});
 	
 	function hasWails() {
 		return typeof window !== 'undefined' && !!window.runtime;
+	}
+	
+	async function checkDefaultConnection() {
+		if (!hasWails()) return;
+		
+		try {
+			triggerConnectionCheck(); // Set checking state to true
+			// Try to get the default config - if it fails, no default exists
+			await GetDefaultConfig();
+			updateConnectionWarningStatus(true, false); // Has default, not checking
+		} catch (error) {
+			// If GetDefaultConfig fails, it likely means no default connection exists
+			updateConnectionWarningStatus(false, false); // No default, not checking
+		}
+	}
+	
+	// Function to handle when user sets up a connection
+	function handleConnectionConfigured() {
+		// Re-check the connection status after user might have configured one
+		checkDefaultConnection();
 	}
 	
 	onMount(() => {
@@ -36,6 +96,9 @@
 			} catch (e) {
 				LogInfo('Could not check initial window state: ' + e);
 			}
+			
+			// Check for default connection
+			checkDefaultConnection();
 		}
 		
 		// Theme initialization
@@ -85,7 +148,11 @@
 	
 	<!-- Main Content -->
 	<main class="flex-1 overflow-auto p-6 transition-all duration-300">
-		{@render children?.()}
+		{#if shouldShowWarning()}
+			<ConnectionWarning onRedirect={handleConnectionConfigured} />
+		{:else}
+			{@render children?.()}
+		{/if}
 	</main>
 </div>
 
