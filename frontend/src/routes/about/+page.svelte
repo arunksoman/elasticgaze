@@ -77,7 +77,7 @@
 	</div>
 
 	<!-- Sticky Footer -->
-	<div class="fixed bottom-0 left-0 right-0 py-4 text-center bg-transparent">
+	<div class="sticky left-0 right-0 text-center bg-transparent" style="bottom: -30px;">
 		<p class="theme-text-primary text-sm font-medium">
 			Made with ❤️ in <img src="/icons/india.svg" alt="India Flag" class="inline w-4 h-4 ml-1 align-middle" />
 		</p>
