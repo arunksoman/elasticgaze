@@ -114,7 +114,7 @@
 			localStorage.setItem('theme', t);
 			console.log('Theme saved to localStorage:', t);
 		}
-		closeSettings();
+		// Don't close settings popup to allow multiple theme switches
 	}
 
 	// Cleanup timeout on component destroy
@@ -189,28 +189,55 @@
 	<!-- Settings Popup -->
 	{#if showSettings}
 		<div class="absolute left-0 bottom-16 w-48 shadow-xl rounded-lg p-4 z-20 theme-bg-secondary">
-			<div class="flex flex-col gap-2">
+			<div class="flex flex-col gap-4">
 				<span class="font-semibold mb-2 theme-text-primary">Choose Theme</span>
-				<button 
-					class={`py-2 px-4 rounded transition ${
-						currentTheme === 'light' 
-							? 'bg-purple-500 text-white hover:bg-purple-600' 
-							: 'theme-bg-tertiary theme-text-secondary hover:bg-purple-100'
-					}`} 
-					onclick={() => setTheme('light')}
-				>
-					Light
-				</button>
-				<button 
-					class={`py-2 px-4 rounded transition ${
-						currentTheme === 'dark' 
-							? 'bg-purple-500 text-white hover:bg-purple-600' 
-							: 'theme-bg-tertiary theme-text-secondary hover:bg-purple-100'
-					}`}
-					onclick={() => setTheme('dark')}
-				>
-					Dark
-				</button>
+				
+				<!-- Theme Toggle Switch -->
+				<div class="flex items-center justify-center">
+					<button
+						class="relative inline-flex items-center w-16 h-6 bg-gray-300 dark:bg-gray-600 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+						onclick={() => setTheme(currentTheme === 'light' ? 'dark' : 'light')}
+						aria-label="Toggle theme"
+					>
+						<!-- Toggle slider -->
+						<div 
+							class={`absolute w-6 h-6 bg-white rounded-full shadow-lg transform transition-transform duration-300 flex items-center justify-center ${
+								currentTheme === 'dark' ? 'translate-x-8' : 'translate-x-0'
+							}`}
+						>
+							<!-- Icon inside the toggle -->
+							<img 
+								src={currentTheme === 'light' ? '/icons/bright.svg' : '/icons/dark.svg'} 
+								alt={currentTheme === 'light' ? 'Light mode' : 'Dark mode'}
+								class="w-4 h-4"
+								style={currentTheme === 'light' 
+									? 'filter: brightness(0) saturate(100%) invert(69%) sepia(100%) saturate(1769%) hue-rotate(16deg) brightness(108%) contrast(98%);' 
+									: 'filter: brightness(0) saturate(100%) invert(20%) sepia(10%) saturate(500%) hue-rotate(200deg) brightness(95%) contrast(90%);'}
+							/>
+						</div>
+						
+						<!-- Background icons -->
+						<div class="flex items-center justify-between w-full px-1.5">
+							<img 
+								src="/icons/bright.svg" 
+								alt="Light mode"
+								class={`w-3 h-3 transition-opacity duration-300 ${
+									currentTheme === 'light' ? 'opacity-0' : 'opacity-60'
+								}`}
+								style="filter: brightness(0) saturate(100%) invert(100%);"
+							/>
+							<img 
+								src="/icons/dark.svg" 
+								alt="Dark mode"
+								class={`w-3 h-3 transition-opacity duration-300 ${
+									currentTheme === 'dark' ? 'opacity-0' : 'opacity-60'
+								}`}
+								style="filter: brightness(0) saturate(100%) invert(100%);"
+							/>
+						</div>
+					</button>
+				</div>
+				
 				<button 
 					class="mt-2 text-xs transition theme-text-muted hover:theme-text-secondary"
 					onclick={closeSettings}
