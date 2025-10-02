@@ -33,7 +33,13 @@
 	
 	// Check if current page should show the connection warning
 	const shouldShowWarning = $derived(() => {
-		if (connectionStatus.isChecking || connectionStatus.hasDefault) return false;
+		// Don't hide warning immediately if we're checking the connection
+		// to prevent flicker during retry operations
+		if (connectionStatus.isChecking && connectionStatus.connectionState !== 'working') {
+			return !excludedPages.includes(page.url.pathname);
+		}
+		
+		if (connectionStatus.connectionState === 'working') return false;
 		return !excludedPages.includes(page.url.pathname);
 	});
 	
@@ -64,13 +70,27 @@
 		if (!hasWails()) return;
 		
 		try {
-			triggerConnectionCheck(); // Set checking state to true
-			// Try to get the default config - if it fails, no default exists
-			await GetDefaultConfig();
-			updateConnectionWarningStatus(true, false); // Has default, not checking
+			triggerConnectionCheck();
+			// Try to use the new TestDefaultConnection method when available
+			// @ts-ignore - Wails runtime methods
+			if (window.go?.main?.App?.TestDefaultConnection) {
+				// @ts-ignore - Wails runtime methods
+				const result = await window.go.main.App.TestDefaultConnection();
+				if (result.success) {
+					updateConnectionWarningStatus(true, true, false, '', 'working');
+				} else if (result.error_code === 'NO_DEFAULT_CONNECTION') {
+					updateConnectionWarningStatus(false, false, false, result.message, 'missing');
+				} else {
+					updateConnectionWarningStatus(true, false, false, result.message, 'failed');
+				}
+			} else {
+				// Fallback to the existing method
+				const { GetDefaultConfig } = await import('$lib/wailsjs/go/main/App');
+				await GetDefaultConfig();
+				updateConnectionWarningStatus(true, true, false, '', 'working');
+			}
 		} catch (error) {
-			// If GetDefaultConfig fails, it likely means no default connection exists
-			updateConnectionWarningStatus(false, false); // No default, not checking
+			updateConnectionWarningStatus(false, false, false, 'No default connection found', 'missing');
 		}
 	}
 	
@@ -149,9 +169,17 @@
 	<!-- Main Content -->
 	<main class="flex-1 overflow-auto p-6 transition-all duration-300">
 		{#if shouldShowWarning()}
-			<ConnectionWarning onRedirect={handleConnectionConfigured} />
+			<div class="transition-all duration-500 ease-in-out">
+				<ConnectionWarning 
+					onRedirect={handleConnectionConfigured}
+					connectionState={connectionStatus.connectionState}
+					errorMessage={connectionStatus.errorMessage}
+				/>
+			</div>
 		{:else}
-			{@render children?.()}
+			<div class="transition-all duration-500 ease-in-out">
+				{@render children?.()}
+			</div>
 		{/if}
 	</main>
 </div>

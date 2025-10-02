@@ -125,3 +125,30 @@ func (a *App) TestConnection(req *models.TestConnectionRequest) (*models.TestCon
 func (a *App) HasDefaultConfig() (bool, error) {
 	return a.configService.HasDefaultConfig()
 }
+
+// TestDefaultConnection tests if the default connection exists and is working
+func (a *App) TestDefaultConnection() (*models.TestConnectionResponse, error) {
+	// First check if default config exists
+	defaultConfig, err := a.configService.GetDefaultConfig()
+	if err != nil {
+		return &models.TestConnectionResponse{
+			Success:      false,
+			Message:      "No default connection configured",
+			ErrorDetails: "No default connection found",
+			ErrorCode:    "NO_DEFAULT_CONNECTION",
+		}, nil
+	}
+
+	// Convert config to test request
+	testReq := &models.TestConnectionRequest{
+		Host:                 defaultConfig.Host,
+		Port:                 defaultConfig.Port,
+		SSLOrHTTPS:           defaultConfig.SSLOrHTTPS,
+		AuthenticationMethod: defaultConfig.AuthenticationMethod,
+		Username:             defaultConfig.Username,
+		Password:             defaultConfig.Password,
+	}
+
+	// Test the connection
+	return a.esService.TestConnection(testReq)
+}
