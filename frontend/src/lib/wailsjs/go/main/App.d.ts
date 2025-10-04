@@ -10,6 +10,12 @@ export function DeleteConfig(arg1:number):Promise<void>;
 
 export function GetAllConfigs():Promise<Array<models.Config>>;
 
+export function GetClusterDashboardData():Promise<models.ProcessedDashboardData>;
+
+export function GetClusterDashboardDataByConfig(arg1:number):Promise<models.ProcessedDashboardData>;
+
+export function GetClusterHealthForAllConfigs():Promise<Record<string, string>>;
+
 export function GetConfigByID(arg1:number):Promise<models.Config>;
 
 export function GetDefaultConfig():Promise<models.Config>;

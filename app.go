@@ -152,3 +152,71 @@ func (a *App) TestDefaultConnection() (*models.TestConnectionResponse, error) {
 	// Test the connection
 	return a.esService.TestConnection(testReq)
 }
+
+// GetClusterDashboardData retrieves dashboard data for the default cluster
+func (a *App) GetClusterDashboardData() (*models.ProcessedDashboardData, error) {
+	// Get default config
+	defaultConfig, err := a.configService.GetDefaultConfig()
+	if err != nil {
+		return nil, fmt.Errorf("no default connection configured: %w", err)
+	}
+
+	// Fetch cluster dashboard data
+	return a.esService.GetClusterDashboardData(defaultConfig)
+}
+
+// GetClusterDashboardDataByConfig retrieves dashboard data for a specific cluster configuration
+func (a *App) GetClusterDashboardDataByConfig(configID int) (*models.ProcessedDashboardData, error) {
+	// Get all configs to find the one with the specified ID
+	configs, err := a.configService.GetAllConfigs()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get configurations: %w", err)
+	}
+
+	var selectedConfig *models.Config
+	for _, config := range configs {
+		if config.ID == configID {
+			selectedConfig = config
+			break
+		}
+	}
+
+	if selectedConfig == nil {
+		return nil, fmt.Errorf("configuration with ID %d not found", configID)
+	}
+
+	// Fetch cluster dashboard data
+	return a.esService.GetClusterDashboardData(selectedConfig)
+}
+
+// GetClusterHealthForAllConfigs retrieves cluster health for all configurations
+func (a *App) GetClusterHealthForAllConfigs() (map[string]string, error) {
+	configs, err := a.configService.GetAllConfigs()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get configurations: %w", err)
+	}
+
+	healthMap := make(map[string]string)
+
+	for _, config := range configs {
+		// Convert config to test request
+		testReq := &models.TestConnectionRequest{
+			Host:                 config.Host,
+			Port:                 config.Port,
+			SSLOrHTTPS:           config.SSLOrHTTPS,
+			AuthenticationMethod: config.AuthenticationMethod,
+			Username:             config.Username,
+			Password:             config.Password,
+		}
+
+		// Get cluster health
+		health, err := a.esService.GetClusterHealthByConfig(testReq)
+		if err != nil {
+			healthMap[config.ConnectionName] = "red" // Default to red on error
+		} else {
+			healthMap[config.ConnectionName] = health.Status
+		}
+	}
+
+	return healthMap, nil
+}

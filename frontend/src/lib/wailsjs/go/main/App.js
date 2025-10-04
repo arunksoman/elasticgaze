@@ -18,6 +18,18 @@ export function GetAllConfigs() {
   return window['go']['main']['App']['GetAllConfigs']();
 }
 
+export function GetClusterDashboardData() {
+  return window['go']['main']['App']['GetClusterDashboardData']();
+}
+
+export function GetClusterDashboardDataByConfig(arg1) {
+  return window['go']['main']['App']['GetClusterDashboardDataByConfig'](arg1);
+}
+
+export function GetClusterHealthForAllConfigs() {
+  return window['go']['main']['App']['GetClusterHealthForAllConfigs']();
+}
+
 export function GetConfigByID(arg1) {
   return window['go']['main']['App']['GetConfigByID'](arg1);
 }

@@ -1,5 +1,8 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import ClusterDropdown from './ClusterDropdown.svelte';
+	import { connectionWarningStatus } from '$lib/stores/connectionWarningStore.js';
 	import {
 		WindowMinimise,
 		WindowToggleMaximise,
@@ -9,6 +12,19 @@
 	} from '$lib/wailsjs/runtime/runtime';
 
 	let { isMax = $bindable(false) } = $props();
+
+	// Pages where the cluster dropdown should not be shown
+	const excludedPages = ['/about', '/connections'];
+	
+	// Subscribe to connection status from store
+	const connectionStatus = $derived($connectionWarningStatus);
+	
+	// Check if cluster dropdown should be shown
+	const shouldShowClusterDropdown = $derived(() => {
+		const currentPath = page.url.pathname;
+		return !excludedPages.includes(currentPath) && 
+		       connectionStatus.connectionState === 'working';
+	});
 
 	function hasWails() {
 		return typeof window !== 'undefined' && !!window.runtime;
@@ -53,6 +69,13 @@
 
 <!-- Window Controls (top-right) -->
 <div class="fixed top-2 right-2 flex gap-2 items-center z-[1000]" style="-webkit-app-region: no-drag;" aria-label="Window controls">
+	<!-- Cluster Dropdown (only shown when connection is working and not on excluded pages) -->
+	{#if shouldShowClusterDropdown()}
+		<div class="mr-4">
+			<ClusterDropdown />
+		</div>
+	{/if}
+
 	<!-- Connection Button -->
 	<div class="mr-5">
 		<button class="appearance-none border-none outline-none p-1.5 rounded-md bg-transparent cursor-pointer flex items-center justify-center transition-all duration-120 hover:shadow-sm hover:bg-black/[0.02] dark:hover:bg-white/[0.05] active:translate-y-[0.5px]" title="Elasticsearch Connections" onclick={handleConnection} aria-label="Elasticsearch Connections">
