@@ -7,7 +7,7 @@
 	let { currentTheme = $bindable('light') } = $props();
 
 	const HomeIcon = '/icons/home.svg';
-	const HamburgerIcon = '/icons/hamburger.svg';
+	const AppIcon = '/icons/eg_icon1.svg';
 	const NodesIcon = '/icons/nodes.svg';
 	const ShardsIcon = '/icons/shards.svg';
 	const IndicesIcon = '/icons/index.svg';
@@ -18,6 +18,7 @@
 	const SettingsIcon = '/icons/settings.svg';
 
 	let expanded = $state(false);
+	let permanentlyExpanded = $state(false);
 	let hoverIndex = null;
 	let showSettings = $state(false);
 	let hoverTimeout = null;
@@ -42,10 +43,13 @@
 	}
 
 	function toggleSidebar() {
-		expanded = !expanded;
+		permanentlyExpanded = !permanentlyExpanded;
+		expanded = permanentlyExpanded;
 	}
 
 	function handleHover(idx) {
+		if (permanentlyExpanded) return; // Don't auto-expand if permanently expanded
+		
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
 			hoverTimeout = null;
@@ -55,6 +59,8 @@
 	}
 
 	function handleMouseLeave() {
+		if (permanentlyExpanded) return; // Don't auto-collapse if permanently expanded
+		
 		// Don't immediately collapse, use a delay to prevent flickering
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
@@ -68,6 +74,8 @@
 	}
 
 	function handleSidebarEnter() {
+		if (permanentlyExpanded) return; // Don't handle hover if permanently expanded
+		
 		// Clear any pending collapse when entering sidebar area
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
@@ -76,6 +84,8 @@
 	}
 
 	function handleSidebarLeave() {
+		if (permanentlyExpanded) return; // Don't handle hover if permanently expanded
+		
 		// Only collapse when leaving the entire sidebar
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
@@ -132,13 +142,16 @@
 	onmouseleave={handleSidebarLeave}
 >
 	<div class="flex-1">
-		<!-- Hamburger -->
+		<!-- App Icon -->
 		<button
-			class="flex items-center justify-center w-12 h-12 mb-2 rounded-lg transition theme-text-primary theme-hover"
+			class="flex items-center w-full h-12 mb-2 rounded-lg transition theme-text-primary theme-hover"
 			onclick={toggleSidebar}
 			aria-label="Toggle menu"
 		>
-			<img src={HamburgerIcon} alt="Menu" class="w-6 h-6 transition-all duration-300 theme-icon" />
+			<img src={AppIcon} alt="ElasticGaze" class="w-6 h-6 mx-4 transition-all duration-300" />
+			{#if expanded}
+				<span class="ml-1 text-lg font-semibold whitespace-nowrap theme-text-primary">ElasticGaze</span>
+			{/if}
 		</button>
 		<!-- Menu Items -->
 		<ul class="mt-2">
