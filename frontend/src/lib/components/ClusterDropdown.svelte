@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { GetAllConfigs, GetClusterHealthForAllConfigs, GetDefaultConfig, GetClusterDashboardDataByConfig } from '$lib/wailsjs/go/main/App';
 	import { selectedCluster } from '$lib/stores/clusterStore.js';
 
@@ -9,6 +10,8 @@
 	let clusterNamesMap = $state({});
 	let selectedConfig = $state(null);
 	let loading = $state(true);
+	let lastUpdatePath = $state('');
+	let isRefreshing = $state(false);
 
 	// Health status color mapping
 	function getHealthColor(configName) {
@@ -21,8 +24,49 @@
 		}
 	}
 
+	// Reactive effect to refresh health data when navigating between pages
+	$effect(() => {
+		const currentPath = page.url.pathname;
+		// Only refresh health data when navigating away from and back to home page
+		// and avoid refreshing on initial load or same page
+		if (lastUpdatePath !== '' && 
+			lastUpdatePath !== currentPath && 
+			currentPath === '/' && 
+			hasWails() && 
+			configs.length > 0) {
+			// Add a small delay to prevent rapid successive calls
+			setTimeout(() => {
+				refreshHealthData();
+			}, 100);
+		}
+		lastUpdatePath = currentPath;
+	});
+
+	// Reactive effect to sync with selectedCluster store changes
+	$effect(() => {
+		const storeCluster = $selectedCluster;
+		if (storeCluster && storeCluster.id !== selectedConfig?.id) {
+			selectedConfig = storeCluster;
+		}
+	});
+
 	function hasWails() {
 		return typeof window !== 'undefined' && !!window.runtime;
+	}
+
+	async function refreshHealthData() {
+		if (!hasWails() || configs.length === 0 || isRefreshing) return;
+		
+		try {
+			isRefreshing = true;
+			// Refresh health status for all configs
+			const health = await GetClusterHealthForAllConfigs();
+			healthMap = health || {};
+		} catch (err) {
+			console.warn('Failed to refresh cluster health:', err);
+		} finally {
+			isRefreshing = false;
+		}
 	}
 
 	async function loadClusterNames() {
@@ -115,26 +159,26 @@
 
 <div class="cluster-dropdown relative">
 	{#if loading}
-		<div class="flex items-center px-3 py-2 theme-bg-secondary theme-text-secondary border theme-border">
-			<div class="w-4 h-4 mr-2 animate-spin">
-				<div class="w-full h-full border-2 border-current border-r-transparent rounded-full"></div>
+		<div class="flex items-center px-2 py-1.5 theme-bg-secondary theme-text-secondary border-0 rounded">
+			<div class="w-3 h-3 mr-2 animate-spin">
+				<div class="w-full h-full border border-current border-r-transparent rounded-full"></div>
 			</div>
-			<span class="text-sm">Loading...</span>
+			<span class="text-xs">Loading...</span>
 		</div>
 	{:else if selectedConfig}
 		<button
-			class="flex items-center px-3 py-2 theme-bg-secondary theme-text-primary theme-hover border theme-border transition-colors duration-200 min-w-[200px]"
+			class="flex items-center px-2 py-1.5 theme-bg-secondary theme-text-primary hover:theme-bg-tertiary rounded transition-colors duration-150 min-w-[160px] text-xs"
 			onclick={toggleDropdown}
 		>
 			<div 
-				class="w-3 h-3 mr-2 rounded-full {getHealthColor(selectedConfig.connection_name)}"
+				class="w-2 h-2 mr-1.5 rounded-full {getHealthColor(selectedConfig.connection_name)}"
 				title="Health status"
 			></div>
-			<span class="text-sm font-medium truncate flex-1 text-left">
+			<span class="font-medium truncate flex-1 text-left">
 				{getClusterName(selectedConfig)}
 			</span>
 			<svg 
-				class="w-4 h-4 ml-2 theme-icon transition-transform duration-200 {showDropdown ? 'rotate-180' : ''}" 
+				class="w-3 h-3 ml-1 theme-icon transition-transform duration-150 {showDropdown ? 'rotate-180' : ''}" 
 				fill="none" 
 				stroke="currentColor" 
 				viewBox="0 0 24 24"
@@ -144,36 +188,36 @@
 		</button>
 
 		{#if showDropdown}
-			<div class="absolute top-full left-0 mt-1 w-full theme-bg-secondary border theme-border shadow-lg z-50 max-h-60 overflow-y-auto">
+			<div class="absolute top-full left-0 mt-0.5 w-full theme-bg-secondary border-0 rounded shadow-sm z-50 max-h-48 overflow-y-auto">
 				{#each configs as config (config.id)}
 					<button
-						class="w-full flex items-center px-3 py-2 text-left theme-hover theme-text-primary transition-colors duration-200 {selectedConfig?.id === config.id ? 'theme-bg-tertiary' : ''}"
+						class="w-full flex items-center px-2 py-1.5 text-left hover:theme-bg-tertiary theme-text-primary transition-colors duration-150 text-xs {selectedConfig?.id === config.id ? 'theme-bg-tertiary' : ''}"
 						onclick={() => selectCluster(config)}
 					>
 						<div 
-							class="w-3 h-3 mr-2 rounded-full {getHealthColor(config.connection_name)}"
+							class="w-2 h-2 mr-1.5 rounded-full {getHealthColor(config.connection_name)}"
 							title="Health status"
 						></div>
 						<div class="flex-1 min-w-0">
-							<div class="text-sm font-medium truncate">{getClusterName(config)}</div>
-							<div class="text-xs theme-text-secondary truncate">{config.connection_name} ({config.host}:{config.port})</div>
+							<div class="font-medium truncate">{getClusterName(config)}</div>
+							<div class="text-[10px] theme-text-secondary truncate">{config.connection_name} • {config.host}:{config.port}</div>
 						</div>
 						{#if config.set_as_default}
-							<span class="ml-2 text-xs theme-text-secondary">(default)</span>
+							<span class="ml-1 text-[10px] theme-text-secondary">(default)</span>
 						{/if}
 					</button>
 				{/each}
 
 				{#if configs.length === 0}
-					<div class="px-3 py-2 text-sm theme-text-secondary">
-						No cluster configurations found
+					<div class="px-2 py-1.5 text-xs theme-text-secondary">
+						No clusters found
 					</div>
 				{/if}
 			</div>
 		{/if}
 	{:else}
-		<div class="flex items-center px-3 py-2 theme-bg-secondary theme-text-secondary border theme-border">
-			<span class="text-sm">No clusters configured</span>
+		<div class="flex items-center px-2 py-1.5 theme-bg-secondary theme-text-secondary border-0 rounded">
+			<span class="text-xs">No clusters</span>
 		</div>
 	{/if}
 </div>

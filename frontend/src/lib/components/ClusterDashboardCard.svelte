@@ -104,10 +104,10 @@
 
 <div class="w-full max-w-6xl mx-auto mt-8">
 	<!-- Simple Card with Toggle -->
-	<div class="theme-bg-secondary border theme-border rounded-lg shadow-lg overflow-hidden">
+	<div class="overflow-hidden">
 		
 		<!-- Card Header -->
-		<div class="theme-bg-primary/10 border-b theme-border px-6 py-4 flex items-center justify-between">
+		<div class="border-b theme-border px-6 py-4 flex items-center justify-between">
 			<div class="flex items-center">
 				{#if dashboardData?.cluster_health?.status}
 					<img 
@@ -160,7 +160,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 {isFlipped ? 'hidden lg:grid' : 'grid'}">
 						
 						<!-- Cluster Info Card -->
-						<div class="theme-bg-primary/5 border theme-border rounded-lg p-4 shadow-sm">
+						<div class="border theme-border rounded-lg p-4">
 							<div class="flex items-center mb-3">
 								<img src="/icons/about.svg" alt="Info" class="w-5 h-5 mr-2 theme-icon" />
 								<h3 class="font-semibold theme-text-primary">Cluster Info</h3>
@@ -186,7 +186,7 @@
 						</div>
 
 						<!-- Nodes Card -->
-						<div class="theme-bg-primary/5 border theme-border rounded-lg p-4 shadow-sm">
+						<div class="border theme-border rounded-lg p-4">
 							<div class="flex items-center mb-3">
 								<img src="/icons/nodes.svg" alt="Nodes" class="w-5 h-5 mr-2 theme-icon" />
 								<h3 class="font-semibold theme-text-primary">Nodes</h3>
@@ -212,7 +212,7 @@
 						</div>
 
 						<!-- Shards Card -->
-						<div class="theme-bg-primary/5 border theme-border rounded-lg p-4 shadow-sm">
+						<div class="border theme-border rounded-lg p-4">
 							<div class="flex items-center mb-3">
 								<img src="/icons/shards.svg" alt="Shards" class="w-5 h-5 mr-2 theme-icon" />
 								<h3 class="font-semibold theme-text-primary">Shards</h3>
@@ -234,7 +234,7 @@
 						</div>
 
 						<!-- Indices Card -->
-						<div class="theme-bg-primary/5 border theme-border rounded-lg p-4 shadow-sm">
+						<div class="border theme-border rounded-lg p-4">
 							<div class="flex items-center mb-3">
 								<img src="/icons/index.svg" alt="Indices" class="w-5 h-5 mr-2 theme-icon" />
 								<h3 class="font-semibold theme-text-primary">Indices</h3>
@@ -262,7 +262,7 @@
 								<img src="/icons/about.svg" alt="Cluster" class="w-5 h-5 mr-2 theme-icon" />
 								Cluster Information
 							</h3>
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 theme-bg-primary/5 border theme-border rounded-lg p-4">
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 border theme-border rounded-lg p-4">
 								<div>
 									<p class="text-xs theme-text-muted uppercase tracking-wide mb-1">Node Name</p>
 									<p class="text-sm theme-text-primary">{dashboardData.cluster_info?.name || 'N/A'}</p>
@@ -289,7 +289,7 @@
 									<img src="/icons/settings.svg" alt="Version" class="w-5 h-5 mr-2 theme-icon" />
 									Version Information
 								</h3>
-								<div class="grid grid-cols-1 md:grid-cols-2 gap-4 theme-bg-primary/5 border-2 theme-border rounded-lg p-4 shadow-sm">
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-2 theme-border rounded-lg p-4">
 									<div>
 										<p class="text-xs theme-text-muted uppercase tracking-wide mb-1">Version</p>
 										<p class="text-sm theme-text-primary">{dashboardData.cluster_info.version.number}</p>
@@ -321,7 +321,7 @@
 								/>
 								Cluster Health
 							</h3>
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 theme-bg-primary/5 border theme-border rounded-lg p-4">
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4 border theme-border rounded-lg p-4">
 								<div>
 									<p class="text-xs theme-text-muted uppercase tracking-wide mb-1">Status</p>
 									<div class="flex items-center">
