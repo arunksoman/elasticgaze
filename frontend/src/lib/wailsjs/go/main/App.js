@@ -14,6 +14,10 @@ export function DeleteConfig(arg1) {
   return window['go']['main']['App']['DeleteConfig'](arg1);
 }
 
+export function ExecuteElasticsearchRequest(arg1) {
+  return window['go']['main']['App']['ExecuteElasticsearchRequest'](arg1);
+}
+
 export function GetAllConfigs() {
   return window['go']['main']['App']['GetAllConfigs']();
 }

@@ -8,6 +8,8 @@ export function CreateConfig(arg1:models.CreateConfigRequest):Promise<models.Con
 
 export function DeleteConfig(arg1:number):Promise<void>;
 
+export function ExecuteElasticsearchRequest(arg1:models.ElasticsearchRestRequest):Promise<models.ElasticsearchRestResponse>;
+
 export function GetAllConfigs():Promise<Array<models.Config>>;
 
 export function GetClusterDashboardData():Promise<models.ProcessedDashboardData>;

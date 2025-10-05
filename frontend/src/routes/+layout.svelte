@@ -267,24 +267,24 @@
 				{@render children?.()}
 			</div>
 		{/if}
-		
-		<!-- Connection Status Strip - shows environment color at bottom of content area -->
-		{#if shouldShowStatusStrip()}
-			<div 
-				class="absolute bottom-0 left-0 right-0 h-[10px] md:h-[10px] sm:h-[8px] transition-all duration-300 ease-in-out hover:h-[12px] sm:hover:h-[10px]"
-				style="background-color: {getEnvironmentColorValue(defaultConnectionColor)};"
-				role="status"
-				aria-label="Connected to {defaultConnectionName} ({defaultConnectionColor} environment)"
-				title="Connected to {defaultConnectionName} ({defaultConnectionColor} environment)"
-			>
-				<!-- Subtle glow effect -->
-				<div 
-					class="absolute -top-[2px] left-0 right-0 h-[2px] opacity-30 transition-all duration-300 hover:opacity-50 hover:h-[3px]"
-					style="background-color: {getEnvironmentColorValue(defaultConnectionColor)};"
-				></div>
-			</div>
-		{/if}
 	</main>
+	
+	<!-- Connection Status Strip - fixed to bottom of viewport -->
+	{#if shouldShowStatusStrip()}
+		<div 
+			class="fixed bottom-0 left-0 right-0 h-[10px] md:h-[10px] sm:h-[8px] transition-all duration-300 ease-in-out hover:h-[12px] sm:hover:h-[10px] z-50"
+			style="background-color: {getEnvironmentColorValue(defaultConnectionColor)};"
+			role="status"
+			aria-label="Connected to {defaultConnectionName} ({defaultConnectionColor} environment)"
+			title="Connected to {defaultConnectionName} ({defaultConnectionColor} environment)"
+		>
+			<!-- Subtle glow effect -->
+			<div 
+				class="absolute -top-[2px] left-0 right-0 h-[2px] opacity-30 transition-all duration-300 hover:opacity-50 hover:h-[3px]"
+				style="background-color: {getEnvironmentColorValue(defaultConnectionColor)};"
+			></div>
+		</div>
+	{/if}
 </div>
 
 <svelte:head>

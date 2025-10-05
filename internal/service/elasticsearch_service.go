@@ -1,12 +1,14 @@
 package service
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"elasticgaze/internal/models"
@@ -454,6 +456,121 @@ func formatBytes(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+// ExecuteRestRequest executes a generic REST request to the default Elasticsearch cluster
+func (s *ElasticsearchService) ExecuteRestRequest(config *models.Config, req *models.ElasticsearchRestRequest) (*models.ElasticsearchRestResponse, error) {
+	log.Printf("🔍 Executing ES REST request: %s %s", req.Method, req.Endpoint)
+
+	// Validate the request
+	if err := req.Validate(); err != nil {
+		log.Printf("❌ REST request validation failed: %v", err)
+		return &models.ElasticsearchRestResponse{
+			Success:      false,
+			StatusCode:   400,
+			ErrorDetails: err.Error(),
+			ErrorCode:    "VALIDATION_ERROR",
+		}, nil
+	}
+
+	// Convert config to connection request for URL building
+	connReq := &models.TestConnectionRequest{
+		Host:                 config.Host,
+		Port:                 config.Port,
+		SSLOrHTTPS:           config.SSLOrHTTPS,
+		AuthenticationMethod: config.AuthenticationMethod,
+		Username:             config.Username,
+		Password:             config.Password,
+	}
+
+	// Clean and normalize the endpoint
+	endpoint := strings.TrimSpace(req.Endpoint)
+	if !strings.HasPrefix(endpoint, "/") {
+		endpoint = "/" + endpoint
+	}
+
+	// Build the URL
+	url := s.buildURL(connReq, endpoint)
+	log.Printf("🌐 Request URL: %s", url)
+
+	// Prepare request body
+	var body io.Reader
+	if req.Body != nil && strings.TrimSpace(*req.Body) != "" {
+		body = bytes.NewBufferString(*req.Body)
+		log.Printf("📄 Request body: %s", *req.Body)
+	}
+
+	// Create HTTP request
+	httpReq, err := http.NewRequest(strings.ToUpper(req.Method), url, body)
+	if err != nil {
+		log.Printf("❌ Failed to create HTTP request: %v", err)
+		return &models.ElasticsearchRestResponse{
+			Success:      false,
+			StatusCode:   500,
+			ErrorDetails: fmt.Sprintf("HTTP request creation failed: %v", err),
+			ErrorCode:    "REQUEST_CREATION_ERROR",
+		}, nil
+	}
+
+	// Add authentication
+	if err := s.addAuthentication(httpReq, connReq); err != nil {
+		log.Printf("❌ Authentication setup failed: %v", err)
+		return &models.ElasticsearchRestResponse{
+			Success:      false,
+			StatusCode:   401,
+			ErrorDetails: fmt.Sprintf("Authentication error: %v", err),
+			ErrorCode:    "AUTH_ERROR",
+		}, nil
+	}
+
+	// Set headers
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("User-Agent", "ElasticGaze/1.0")
+
+	// Make the request
+	log.Printf("🚀 Making HTTP request...")
+	start := time.Now()
+	resp, err := s.client.Do(httpReq)
+	duration := time.Since(start)
+
+	if err != nil {
+		log.Printf("❌ HTTP request failed after %v: %v", duration, err)
+		return &models.ElasticsearchRestResponse{
+			Success:      false,
+			StatusCode:   500,
+			ErrorDetails: fmt.Sprintf("Connection failed after %v: %v", duration, err),
+			ErrorCode:    "CONNECTION_ERROR",
+		}, nil
+	}
+	defer resp.Body.Close()
+
+	log.Printf("📊 Response status: %d, Duration: %v", resp.StatusCode, duration)
+
+	// Read response body
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("❌ Failed to read response body: %v", err)
+		return &models.ElasticsearchRestResponse{
+			Success:      false,
+			StatusCode:   resp.StatusCode,
+			ErrorDetails: fmt.Sprintf("Failed to read response: %v", err),
+			ErrorCode:    "RESPONSE_READ_ERROR",
+		}, nil
+	}
+
+	// Check if the response is successful (2xx status codes)
+	success := resp.StatusCode >= 200 && resp.StatusCode < 300
+	if !success {
+		log.Printf("⚠️ Elasticsearch returned error status %d", resp.StatusCode)
+	} else {
+		log.Printf("✅ Request completed successfully")
+	}
+
+	return &models.ElasticsearchRestResponse{
+		Success:    success,
+		StatusCode: resp.StatusCode,
+		Response:   string(responseBody),
+	}, nil
 }
 
 // buildURL constructs the full URL for Elasticsearch API calls

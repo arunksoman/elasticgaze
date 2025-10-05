@@ -220,3 +220,20 @@ func (a *App) GetClusterHealthForAllConfigs() (map[string]string, error) {
 
 	return healthMap, nil
 }
+
+// ExecuteElasticsearchRequest executes a generic REST request to the default Elasticsearch cluster
+func (a *App) ExecuteElasticsearchRequest(req *models.ElasticsearchRestRequest) (*models.ElasticsearchRestResponse, error) {
+	// Get default config
+	defaultConfig, err := a.configService.GetDefaultConfig()
+	if err != nil {
+		return &models.ElasticsearchRestResponse{
+			Success:      false,
+			StatusCode:   500,
+			ErrorDetails: "No default connection configured",
+			ErrorCode:    "NO_DEFAULT_CONNECTION",
+		}, nil
+	}
+
+	// Execute the request
+	return a.esService.ExecuteRestRequest(defaultConfig, req)
+}

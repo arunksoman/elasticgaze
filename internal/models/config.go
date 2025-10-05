@@ -58,6 +58,8 @@ var (
 	ErrConnectionNameRequired     = &ValidationError{Field: "connection_name", Message: "connection name is required"}
 	ErrHostRequired               = &ValidationError{Field: "host", Message: "host is required"}
 	ErrMultipleDefaultsNotAllowed = &ValidationError{Field: "set_as_default", Message: "only one default connection is allowed"}
+	ErrMethodRequired             = &ValidationError{Field: "method", Message: "HTTP method is required"}
+	ErrEndpointRequired           = &ValidationError{Field: "endpoint", Message: "endpoint is required"}
 )
 
 // ValidationError represents a validation error

@@ -2,6 +2,7 @@
 	import RestRequestForm from '$lib/components/RestRequestForm.svelte';
 	import RequestTabs from '$lib/components/RequestTabs.svelte';
 	import ResponseViewer from '$lib/components/ResponseViewer.svelte';
+	import { ExecuteElasticsearchRequest } from '$lib/wailsjs/go/main/App.js';
 	
 	// REST page component
 	let method = 'GET';
@@ -81,42 +82,52 @@
 		// Set loading state
 		isLoading = true;
 		
-		// Placeholder for REST API request functionality
 		console.log('REST Request:', requestMethod, requestEndpoint, requestBody);
 		
-		// Simulate API call delay
-		setTimeout(() => {
-			responseData = JSON.stringify({
-				"took": 5,
-				"timed_out": false,
-				"_shards": {
-					"total": 1,
-					"successful": 1,
-					"skipped": 0,
-					"failed": 0
-				},
-				"hits": {
-					"total": {
-						"value": 10000,
-						"relation": "gte"
-					},
-					"max_score": 1.0,
-					"hits": [
-						{
-							"_index": "test-index",
-							"_type": "_doc",
-							"_id": "1",
-							"_score": 1.0,
-							"_source": {
-								"title": "Sample Document",
-								"content": "This is a sample Elasticsearch document"
-							}
-						}
-					]
+		// Prepare the request object for the Go backend
+		const esRequest = {
+			method: requestMethod,
+			endpoint: requestEndpoint,
+			body: requestBody && requestBody.trim() ? requestBody : null
+		};
+		
+		// Call the Go function
+		ExecuteElasticsearchRequest(esRequest)
+			.then(response => {
+				console.log('ES Response:', response);
+				
+				if (response.success) {
+					// Parse and pretty-print the response
+					try {
+						const parsedResponse = JSON.parse(response.response);
+						responseData = JSON.stringify(parsedResponse, null, 2);
+					} catch (e) {
+						// If it's not JSON, just display as-is
+						responseData = response.response;
+					}
+				} else {
+					// Show error response
+					const errorResponse = {
+						error: true,
+						status_code: response.status_code,
+						error_code: response.error_code,
+						error_details: response.error_details
+					};
+					responseData = JSON.stringify(errorResponse, null, 2);
 				}
-			}, null, 2);
-			isLoading = false;
-		}, 1000);
+			})
+			.catch(error => {
+				console.error('Request failed:', error);
+				const errorResponse = {
+					error: true,
+					message: 'Request failed',
+					details: error.toString()
+				};
+				responseData = JSON.stringify(errorResponse, null, 2);
+			})
+			.finally(() => {
+				isLoading = false;
+			});
 	}
 </script>
 

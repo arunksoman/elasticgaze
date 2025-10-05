@@ -141,6 +141,42 @@ export namespace models {
 	        this.set_as_default = source["set_as_default"];
 	    }
 	}
+	export class ElasticsearchRestRequest {
+	    method: string;
+	    endpoint: string;
+	    body?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ElasticsearchRestRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.method = source["method"];
+	        this.endpoint = source["endpoint"];
+	        this.body = source["body"];
+	    }
+	}
+	export class ElasticsearchRestResponse {
+	    success: boolean;
+	    status_code: number;
+	    response: string;
+	    error_details?: string;
+	    error_code?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ElasticsearchRestResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.status_code = source["status_code"];
+	        this.response = source["response"];
+	        this.error_details = source["error_details"];
+	        this.error_code = source["error_code"];
+	    }
+	}
 	export class IndexMetrics {
 	    document_count: number;
 	    disk_usage: string;
