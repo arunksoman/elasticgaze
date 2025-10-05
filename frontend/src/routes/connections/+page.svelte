@@ -22,6 +22,7 @@
 	import ConnectionForm from '$lib/components/ConnectionForm.svelte';
 	import { connections, connectionService } from '$lib/stores/connectionStore.js';
 	import { refreshConnectionStatus } from '$lib/stores/connectionWarningStore.js';
+	import { triggerConnectionUpdate } from '$lib/stores/connectionUpdateStore.js';
 	import { CreateConfig, UpdateConfig, GetAllConfigs, DeleteConfig } from '$lib/wailsjs/go/main/App.js';
 	
 	/**
@@ -235,6 +236,9 @@
 			// Refresh connection warning status
 			await refreshConnectionStatus();
 			
+			// Trigger connection update for layout strip
+			triggerConnectionUpdate();
+			
 			// Show success toast
 			const action = editingConnection ? 'updated' : 'created';
 			showToast(`Connection successfully ${action}`, 'success', 2000);
@@ -281,6 +285,9 @@
 			// Refresh connection warning status
 			await refreshConnectionStatus();
 			
+			// Trigger connection update for layout strip
+			triggerConnectionUpdate();
+			
 			showToast('Connection deleted successfully', 'success', 2000);
 		} catch (error) {
 			console.error('Error deleting connection:', error);
@@ -311,6 +318,9 @@
 			
 			// Refresh connection warning status
 			await refreshConnectionStatus();
+			
+			// Trigger connection update for layout strip
+			triggerConnectionUpdate();
 			
 			showToast('Default connection updated successfully', 'success', 2000);
 		} catch (error) {

@@ -12,6 +12,7 @@
 		updateConnectionWarningStatus, 
 		triggerConnectionCheck 
 	} from '$lib/stores/connectionWarningStore.js';
+	import { connectionUpdateTrigger } from '$lib/stores/connectionUpdateStore.js';
 	// Wails runtime controls
 	import {
 		WindowIsMaximised,
@@ -25,11 +26,20 @@
 	let currentTheme = $state('light');
 	let lastCheckedPath = $state('');
 	
+	// Connection status strip state
+	let defaultConnectionColor = $state('');
+	let defaultConnectionName = $state('');
+	let showConnectionStrip = $state(false);
+	
 	// Pages where the connection warning should not be shown
 	const excludedPages = ['/about', '/connections'];
 	
+	// Pages where the connection status strip should not be shown
+	const stripExcludedPages = ['/about', '/connections'];
+	
 	// Subscribe to connection status from store
 	const connectionStatus = $derived($connectionWarningStatus);
+	const updateTrigger = $derived($connectionUpdateTrigger);
 	
 	// Check if current page should show the connection warning
 	const shouldShowWarning = $derived(() => {
@@ -41,6 +51,15 @@
 		
 		if (connectionStatus.connectionState === 'working') return false;
 		return !excludedPages.includes(page.url.pathname);
+	});
+	
+	// Check if current page should show the connection status strip
+	const shouldShowStatusStrip = $derived(() => {
+		return !stripExcludedPages.includes(page.url.pathname) && 
+		       connectionStatus.connectionState === 'working' && 
+		       connectionStatus.hasDefault && 
+		       defaultConnectionColor && 
+		       defaultConnectionColor.trim() !== '';
 	});
 	
 	// Reactive check when page changes
@@ -62,6 +81,24 @@
 		lastCheckedPath = currentPath;
 	});
 	
+	// Reactive effect to monitor connection status changes
+	$effect(() => {
+		// When connection status changes to working, load the default connection data
+		if (connectionStatus.connectionState === 'working' && connectionStatus.hasDefault) {
+			loadDefaultConnectionData();
+		} else if (connectionStatus.connectionState !== 'working') {
+			clearConnectionStripData();
+		}
+	});
+	
+	// Listen for connection update triggers from other components
+	$effect(() => {
+		// When trigger changes, reload connection data if we have a working connection
+		if (updateTrigger > 0 && connectionStatus.connectionState === 'working' && hasWails()) {
+			loadDefaultConnectionData();
+		}
+	});
+	
 	function hasWails() {
 		return typeof window !== 'undefined' && !!window.runtime;
 	}
@@ -78,20 +115,69 @@
 				const result = await window.go.main.App.TestDefaultConnection();
 				if (result.success) {
 					updateConnectionWarningStatus(true, true, false, '', 'working');
+					// Load default connection data for the strip
+					await loadDefaultConnectionData();
 				} else if (result.error_code === 'NO_DEFAULT_CONNECTION') {
 					updateConnectionWarningStatus(false, false, false, result.message, 'missing');
+					clearConnectionStripData();
 				} else {
 					updateConnectionWarningStatus(true, false, false, result.message, 'failed');
+					clearConnectionStripData();
 				}
 			} else {
 				// Fallback to the existing method
 				const { GetDefaultConfig } = await import('$lib/wailsjs/go/main/App');
-				await GetDefaultConfig();
+				const defaultConfig = await GetDefaultConfig();
 				updateConnectionWarningStatus(true, true, false, '', 'working');
+				// Update strip data with the loaded config
+				if (defaultConfig) {
+					defaultConnectionColor = defaultConfig.env_indicator_color || '';
+					defaultConnectionName = defaultConfig.connection_name || '';
+				}
 			}
 		} catch (error) {
 			updateConnectionWarningStatus(false, false, false, 'No default connection found', 'missing');
+			clearConnectionStripData();
 		}
+	}
+	
+	// Function to load default connection data for the status strip
+	async function loadDefaultConnectionData() {
+		if (!hasWails()) return;
+		
+		try {
+			const defaultConfig = await GetDefaultConfig();
+			if (defaultConfig) {
+				defaultConnectionColor = defaultConfig.env_indicator_color || '';
+				defaultConnectionName = defaultConfig.connection_name || '';
+			} else {
+				clearConnectionStripData();
+			}
+		} catch (error) {
+			clearConnectionStripData();
+		}
+	}
+	
+	// Function to clear connection strip data
+	function clearConnectionStripData() {
+		defaultConnectionColor = '';
+		defaultConnectionName = '';
+	}
+	
+	// Function to convert environment color names to actual color values
+	function getEnvironmentColorValue(colorName) {
+		const environmentColors = [
+			{ name: 'Red', value: 'red', color: '#ef4444' },
+			{ name: 'Orange', value: 'orange', color: '#f97316' },
+			{ name: 'Yellow', value: 'yellow', color: '#eab308' },
+			{ name: 'Green', value: 'green', color: '#22c55e' },
+			{ name: 'Dodger Blue', value: 'dodgerblue', color: '#3b82f6' },
+			{ name: 'Purple', value: 'purple', color: '#a855f7' },
+			{ name: 'Pink', value: 'pink', color: '#ec4899' }
+		];
+		
+		const colorObj = environmentColors.find(c => c.value === colorName);
+		return colorObj ? colorObj.color : '#3b82f6'; // Default to dodger blue
 	}
 	
 	// Function to handle when user sets up a connection
@@ -167,7 +253,7 @@
 	<SidebarMenu bind:currentTheme />
 	
 	<!-- Main Content -->
-	<main class="flex-1 overflow-auto p-6 transition-all duration-300">
+	<main class="flex-1 overflow-auto p-6 transition-all duration-300 relative">
 		{#if shouldShowWarning()}
 			<div class="transition-all duration-500 ease-in-out">
 				<ConnectionWarning 
@@ -179,6 +265,23 @@
 		{:else}
 			<div class="transition-all duration-500 ease-in-out">
 				{@render children?.()}
+			</div>
+		{/if}
+		
+		<!-- Connection Status Strip - shows environment color at bottom of content area -->
+		{#if shouldShowStatusStrip()}
+			<div 
+				class="absolute bottom-0 left-0 right-0 h-[10px] md:h-[10px] sm:h-[8px] transition-all duration-300 ease-in-out hover:h-[12px] sm:hover:h-[10px]"
+				style="background-color: {getEnvironmentColorValue(defaultConnectionColor)};"
+				role="status"
+				aria-label="Connected to {defaultConnectionName} ({defaultConnectionColor} environment)"
+				title="Connected to {defaultConnectionName} ({defaultConnectionColor} environment)"
+			>
+				<!-- Subtle glow effect -->
+				<div 
+					class="absolute -top-[2px] left-0 right-0 h-[2px] opacity-30 transition-all duration-300 hover:opacity-50 hover:h-[3px]"
+					style="background-color: {getEnvironmentColorValue(defaultConnectionColor)};"
+				></div>
 			</div>
 		{/if}
 	</main>
