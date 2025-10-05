@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 
 	"github.com/wailsapp/wails/v2"
@@ -29,6 +30,12 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 1},
 		OnStartup:        app.startup,
+		OnShutdown: func(ctx context.Context) {
+			// Ensure database connection is properly closed on shutdown
+			if err := app.Close(); err != nil {
+				println("Error closing database:", err.Error())
+			}
+		},
 		Bind: []interface{}{
 			app,
 		},
