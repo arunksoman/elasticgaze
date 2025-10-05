@@ -18,7 +18,7 @@
 
 <select 
 	bind:value={method}
-	class={`border theme-border p-3 theme-bg-tertiary rounded font-semibold ${getMethodColor(method)} min-w-[100px]`}
+	class={`border theme-border p-2 theme-bg-tertiary rounded font-semibold ${getMethodColor(method)} min-w-[100px]`}
 >
 	<option value="GET" class="text-green-500 font-semibold">GET</option>
 	<option value="POST" class="text-orange-500 font-semibold">POST</option>

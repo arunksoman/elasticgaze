@@ -7,7 +7,6 @@
 	
 	export let method = 'GET';
 	export let endpoint = '';
-	export let placeholder = '/_cluster/health';
 	export let isLoading = false;
 	
 	function handleSendRequest() {
@@ -21,11 +20,11 @@
 <!-- URL and Method Section -->
 <div class="flex gap-3 mb-6">
 	<RequestMethodSelector bind:method />
-	<RequestUrlInput bind:endpoint {placeholder} />
+	<RequestUrlInput bind:endpoint />
 	<button 
 		on:click={handleSendRequest}
 		disabled={isLoading}
-		class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded font-medium transition-colors"
+		class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded font-medium transition-colors"
 	>
 		{isLoading ? 'Sending...' : 'Send'}
 	</button>
