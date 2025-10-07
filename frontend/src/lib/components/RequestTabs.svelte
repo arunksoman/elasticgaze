@@ -5,7 +5,7 @@
 	
 	const dispatch = createEventDispatcher();
 	
-	export let activeTab = 'params';
+	export let activeTab = 'body';
 	export let params = [];
 	export let requestBody = '{\n  "query": {\n    "match_all": {}\n  }\n}';
 	
@@ -23,16 +23,16 @@
 	<!-- Tab Headers -->
 	<div class="flex border-b theme-border mb-4">
 		<button 
-			on:click={() => setActiveTab('params')}
-			class="px-4 py-2 font-medium text-sm transition-colors border-b-2 {activeTab === 'params' ? 'border-blue-500 theme-text-primary' : 'border-transparent theme-text-secondary hover:theme-text-primary'}"
-		>
-			Params
-		</button>
-		<button 
 			on:click={() => setActiveTab('body')}
 			class="px-4 py-2 font-medium text-sm transition-colors border-b-2 {activeTab === 'body' ? 'border-blue-500 theme-text-primary' : 'border-transparent theme-text-secondary hover:theme-text-primary'}"
 		>
 			Request Body
+		</button>
+		<button 
+			on:click={() => setActiveTab('params')}
+			class="px-4 py-2 font-medium text-sm transition-colors border-b-2 {activeTab === 'params' ? 'border-blue-500 theme-text-primary' : 'border-transparent theme-text-secondary hover:theme-text-primary'}"
+		>
+			Params
 		</button>
 	</div>
 	
