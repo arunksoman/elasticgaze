@@ -5,9 +5,12 @@
 	
 	const dispatch = createEventDispatcher();
 	
-	export let requestBody = '';  // No default request body
-	export let height = '100%';
-	export let title = 'Request Body';
+	// Use $props() for Svelte 5 runes mode
+	let {
+		requestBody = '',  // No default request body
+		height = '100%',
+		title = 'Request Body'
+	} = $props();
 	
 	function handleChange(event) {
 		requestBody = event.detail;

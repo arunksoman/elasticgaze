@@ -3,7 +3,10 @@
 	
 	const dispatch = createEventDispatcher();
 	
-	export let endpoint = '';
+	// Use $props() for Svelte 5 runes mode
+	let {
+		endpoint = ''
+	} = $props();
 	
 	function handleInput(event) {
 		endpoint = event.target.value;
@@ -14,6 +17,6 @@
 <input 
 	type="text" 
 	value={endpoint}
-	on:input={handleInput}
+	oninput={handleInput}
 	class="flex-1 border theme-border p-2 theme-bg-tertiary theme-text-primary rounded"
 />

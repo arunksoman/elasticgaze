@@ -3,7 +3,10 @@
 	
 	const dispatch = createEventDispatcher();
 	
-	export let method = 'GET';
+	// Use $props() for Svelte 5 runes mode
+	let {
+		method = 'GET'
+	} = $props();
 	
 	// Postman-style method colors
 	function getMethodColor(methodName) {
@@ -27,7 +30,7 @@
 
 <select 
 	value={method}
-	on:change={handleChange}
+	onchange={handleChange}
 	class={`border theme-border p-2 theme-bg-tertiary rounded font-semibold ${getMethodColor(method)} min-w-[100px]`}
 >
 	<option value="GET" class="text-green-500 font-semibold">GET</option>

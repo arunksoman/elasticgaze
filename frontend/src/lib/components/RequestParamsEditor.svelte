@@ -3,15 +3,20 @@
 	
 	const dispatch = createEventDispatcher();
 	
-	export let params = [];
+	// Use $props() for Svelte 5 runes mode
+	let {
+		params = []
+	} = $props();
 	
 	// Ensure there's always at least one empty row for new parameters
-	$: if (params.length === 0 || params[params.length - 1].key || params[params.length - 1].value) {
-		// Only add if the last row has content or if there are no rows
-		if (params.length === 0 || (params[params.length - 1].key && params[params.length - 1].value)) {
-			params = [...params, { key: '', value: '', enabled: true }];
+	$effect(() => {
+		if (params.length === 0 || params[params.length - 1].key || params[params.length - 1].value) {
+			// Only add if the last row has content or if there are no rows
+			if (params.length === 0 || (params[params.length - 1].key && params[params.length - 1].value)) {
+				params = [...params, { key: '', value: '', enabled: true }];
+			}
 		}
-	}
+	});
 	
 	function addParam() {
 		params = [...params, { key: '', value: '', enabled: true }];
@@ -66,7 +71,7 @@
 	<div class="flex justify-between items-center">
 		<span class="block theme-text-primary font-medium text-lg">Parameters</span>
 		<button 
-			on:click={addParam}
+			onclick={addParam}
 			class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
 			title="Add additional parameter row"
 		>
@@ -97,7 +102,7 @@
 						<input 
 							type="checkbox" 
 							checked={param.enabled}
-							on:change={() => toggleParam(index)}
+							onchange={() => toggleParam(index)}
 							class="w-4 h-4 text-blue-600 rounded"
 						/>
 					</div>
@@ -107,7 +112,7 @@
 						<input 
 							type="text" 
 							value={param.key}
-							on:input={(e) => updateParam(index, 'key', e.target.value)}
+							oninput={(e) => updateParam(index, 'key', e.target.value)}
 							placeholder="Parameter key"
 							class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary rounded text-sm"
 							class:opacity-50={!param.enabled}
@@ -119,7 +124,7 @@
 						<input 
 							type="text" 
 							value={param.value}
-							on:input={(e) => updateParam(index, 'value', e.target.value)}
+							oninput={(e) => updateParam(index, 'value', e.target.value)}
 							placeholder="Parameter value"
 							class="w-full border theme-border p-2 theme-bg-tertiary theme-text-primary rounded text-sm"
 							class:opacity-50={!param.enabled}
@@ -129,9 +134,10 @@
 					<!-- Remove button -->
 					<div class="col-span-1 flex justify-center">
 						<button 
-							on:click={() => removeParam(index)}
+							onclick={() => removeParam(index)}
 							class="text-red-500 hover:text-red-700 p-1"
 							title="Remove parameter"
+							aria-label="Remove parameter"
 						>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

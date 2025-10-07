@@ -5,9 +5,12 @@
 	
 	const dispatch = createEventDispatcher();
 	
-	export let activeTab = 'body';
-	export let params = [];
-	export let requestBody = '';  // No default request body
+	// Use $props() for Svelte 5 runes mode
+	let {
+		activeTab = 'body',
+		params = [],
+		requestBody = ''  // No default request body
+	} = $props();
 	
 	function setActiveTab(tab) {
 		activeTab = tab;
@@ -28,13 +31,13 @@
 	<!-- Tab Headers -->
 	<div class="flex border-b theme-border mb-4 flex-shrink-0">
 		<button 
-			on:click={() => setActiveTab('body')}
+			onclick={() => setActiveTab('body')}
 			class="px-4 py-2 font-medium text-sm transition-colors border-b-2 {activeTab === 'body' ? 'border-blue-500 theme-text-primary' : 'border-transparent theme-text-secondary hover:theme-text-primary'}"
 		>
 			Request Body
 		</button>
 		<button 
-			on:click={() => setActiveTab('params')}
+			onclick={() => setActiveTab('params')}
 			class="px-4 py-2 font-medium text-sm transition-colors border-b-2 {activeTab === 'params' ? 'border-blue-500 theme-text-primary' : 'border-transparent theme-text-secondary hover:theme-text-primary'}"
 		>
 			Params

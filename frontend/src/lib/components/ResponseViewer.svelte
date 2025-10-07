@@ -2,9 +2,12 @@
 	import MonacoEditor from '$lib/MonacoEditor.svelte';
 	import { theme } from '$lib/theme.js';
 	
-	export let responseData = '';
-	export let height = '100%';
-	export let title = 'Response';
+	// Use $props() for Svelte 5 runes mode
+	let {
+		responseData = '',
+		height = '100%',
+		title = 'Response'
+	} = $props();
 </script>
 
 <div class="h-full flex flex-col">
@@ -12,7 +15,7 @@
 	<div class="flex-1 min-h-0">
 		{#if responseData}
 			<MonacoEditor 
-				bind:value={responseData} 
+				value={responseData} 
 				language="json" 
 				{height}
 				readOnly={true}

@@ -4,24 +4,35 @@
 	
 	const dispatch = createEventDispatcher();
 	
-	export let value = '';
-	export let language = 'json';
-	export let readOnly = false;
-	export let height = '200px';
-	export let theme = 'vs-dark';
-	export let fontSize = 14;
-	export let tabSize = 2;
-	export let wordWrap = 'off';
-	export let lineNumbers = 'on';
-	export let minimap = false;
-	export let scrollBeyondLastLine = false;
-	export let formatOnPaste = true;
-	export let formatOnType = true;
-	export let autoClosingBrackets = 'always';
-	export let autoClosingQuotes = 'always';
-	export let placeholder = '';
-	export let folding = true;
-	export let showFoldingControls = 'always';
+	// Use $props() for Svelte 5 runes mode
+	let {
+		value = '',
+		language = 'json',
+		readOnly = false,
+		height = '200px',
+		theme = 'vs-dark',
+		fontSize = 14,
+		tabSize = 2,
+		wordWrap = 'off',
+		lineNumbers = 'on',
+		minimap = false,
+		scrollBeyondLastLine = false,
+		formatOnPaste = true,
+		formatOnType = true,
+		autoClosingBrackets = 'always',
+		autoClosingQuotes = 'always',
+		placeholder = '',
+		folding = true,
+		showFoldingControls = 'always'
+	} = $props();
+	
+	// Zoom functionality
+	let currentZoom = $state(100); // Zoom percentage
+	let baseFontSize = fontSize;
+	let isFocused = $state(false); // Track if this editor is focused
+	
+	// Global reference to track active editor
+	let editorId = Math.random().toString(36).substr(2, 9); // Unique ID for this editor instance
 	
 	let editor;
 	let container;
@@ -188,6 +199,96 @@
 			formatDocument();
 		});
 		
+		// Add focus and blur event listeners with debugging
+		editor.onDidFocusEditorText(() => {
+			isFocused = true;
+			// Set this editor as the global active editor
+			window.activeMonacoEditorId = editorId;
+			window.activeMonacoEditor = {
+				editor: editor,
+				zoomIn: zoomIn,
+				zoomOut: zoomOut,
+				resetZoom: resetZoom,
+				type: readOnly ? 'Response' : 'Request'
+			};
+			console.log(`Editor focused: ${readOnly ? 'Response' : 'Request'} Editor (ID: ${editorId})`);
+		});
+		
+		editor.onDidBlurEditorText(() => {
+			isFocused = false;
+			// Clear global active editor if it's this one
+			if (window.activeMonacoEditorId === editorId) {
+				window.activeMonacoEditorId = null;
+				window.activeMonacoEditor = null;
+			}
+			console.log(`Editor blurred: ${readOnly ? 'Response' : 'Request'} Editor (ID: ${editorId})`);
+		});
+		
+		// Additional focus detection for widget focus
+		editor.onDidFocusEditorWidget(() => {
+			isFocused = true;
+			// Set this editor as the global active editor
+			window.activeMonacoEditorId = editorId;
+			window.activeMonacoEditor = {
+				editor: editor,
+				zoomIn: zoomIn,
+				zoomOut: zoomOut,
+				resetZoom: resetZoom,
+				type: readOnly ? 'Response' : 'Request'
+			};
+			console.log(`Editor widget focused: ${readOnly ? 'Response' : 'Request'} Editor (ID: ${editorId})`);
+		});
+		
+		editor.onDidBlurEditorWidget(() => {
+			// Only blur if neither text nor widget has focus
+			if (!editor.hasTextFocus() && !editor.hasWidgetFocus()) {
+				isFocused = false;
+				// Clear global active editor if it's this one
+				if (window.activeMonacoEditorId === editorId) {
+					window.activeMonacoEditorId = null;
+					window.activeMonacoEditor = null;
+				}
+				console.log(`Editor widget blurred: ${readOnly ? 'Response' : 'Request'} Editor (ID: ${editorId})`);
+			}
+		});
+		
+		// Set up global keyboard shortcuts if not already set up
+		if (!window.monacoZoomListenerSetup) {
+			window.monacoZoomListenerSetup = true;
+			
+			const handleGlobalKeydown = (e) => {
+				// Check for Ctrl+Plus (Ctrl+=)
+				if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
+					e.preventDefault();
+					if (window.activeMonacoEditor) {
+						console.log(`Global Zoom In: ${window.activeMonacoEditor.type} Editor`);
+						window.activeMonacoEditor.zoomIn();
+					}
+				}
+				// Check for Ctrl+Minus
+				else if (e.ctrlKey && e.key === '-') {
+					e.preventDefault();
+					if (window.activeMonacoEditor) {
+						console.log(`Global Zoom Out: ${window.activeMonacoEditor.type} Editor`);
+						window.activeMonacoEditor.zoomOut();
+					}
+				}
+				// Check for Ctrl+0
+				else if (e.ctrlKey && e.key === '0') {
+					e.preventDefault();
+					if (window.activeMonacoEditor) {
+						console.log(`Global Zoom Reset: ${window.activeMonacoEditor.type} Editor`);
+						window.activeMonacoEditor.resetZoom();
+					}
+				}
+			};
+			
+			window.addEventListener('keydown', handleGlobalKeydown);
+			
+			// Store reference for cleanup
+			window.monacoZoomKeydownHandler = handleGlobalKeydown;
+		}
+		
 		// Set up ResizeObserver to handle container size changes
 		if (typeof ResizeObserver !== 'undefined') {
 			resizeObserver = new ResizeObserver((entries) => {
@@ -249,10 +350,49 @@
 		}
 	}
 	
-	// Export format function for external use
-	export { formatDocument };
+	// Zoom functions
+	function zoomIn() {
+		if (currentZoom < 300) { // Max zoom 300%
+			currentZoom += 10;
+			updateEditorFontSize();
+		}
+	}
+	
+	function zoomOut() {
+		if (currentZoom > 50) { // Min zoom 50%
+			currentZoom -= 10;
+			updateEditorFontSize();
+		}
+	}
+	
+	function resetZoom() {
+		currentZoom = 100;
+		updateEditorFontSize();
+	}
+	
+	function updateEditorFontSize() {
+		if (editor) {
+			const newFontSize = Math.round((baseFontSize * currentZoom) / 100);
+			editor.updateOptions({ fontSize: newFontSize });
+		}
+	}
+	
+	// Update base font size when fontSize prop changes
+	$effect(() => {
+		baseFontSize = fontSize;
+		updateEditorFontSize();
+	});
+	
+	// Export zoom functions for external use
+	export { formatDocument, zoomIn, zoomOut, resetZoom };
 	
 	onDestroy(() => {
+		// Clear this editor from global references if it's active
+		if (window.activeMonacoEditorId === editorId) {
+			window.activeMonacoEditorId = null;
+			window.activeMonacoEditor = null;
+		}
+		
 		if (resizeObserver) {
 			resizeObserver.disconnect();
 		}
@@ -263,26 +403,22 @@
 		window.removeEventListener('resize', handleWindowResize);
 	});
 	
-	// Update editor when value changes externally
-	$: if (editor && editor.getValue() !== value) {
-		editor.setValue(value);
-		if (placeholder) {
-			updatePlaceholder();
-		}
-	}
-	
 	// Update theme when it changes
-	$: if (editor) {
-		monaco.editor.setTheme(theme === 'dark' ? 'custom-dark' : 'custom-light');
-	}
+	$effect(() => {
+		if (editor) {
+			monaco.editor.setTheme(theme === 'dark' ? 'custom-dark' : 'custom-light');
+		}
+	});
 	
 	// Handle external value changes (avoid binding issues)
-	$: if (editor && editor.getValue() !== value) {
-		isUpdatingFromExternal = true;
-		editor.setValue(value || '');
-		updatePlaceholder();
-		isUpdatingFromExternal = false;
-	}
+	$effect(() => {
+		if (editor && editor.getValue() !== value) {
+			isUpdatingFromExternal = true;
+			editor.setValue(value || '');
+			updatePlaceholder();
+			isUpdatingFromExternal = false;
+		}
+	});
 </script>
 
 <style>
@@ -291,6 +427,42 @@
 		font-style: italic;
 		opacity: 0.7;
 	}
+	
+	.editor-container {
+		position: relative;
+	}
+	
+	.zoom-indicator {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		background: rgba(0, 0, 0, 0.7);
+		color: white;
+		padding: 4px 8px;
+		border-radius: 4px;
+		font-size: 11px;
+		font-family: monospace;
+		z-index: 10;
+		user-select: none;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+	
+	.zoom-indicator.light {
+		background: rgba(255, 255, 255, 0.9);
+		color: #333;
+		border: 1px solid rgba(0, 0, 0, 0.1);
+	}
 </style>
 
-<div bind:this={container} style="height: {height}; width: 100%;" class="border theme-border rounded min-h-0"></div>
+<div class="editor-container" style="height: {height}; width: 100%;">
+	<div bind:this={container} style="height: 100%; width: 100%;" class="border theme-border rounded min-h-0"></div>
+	
+	<!-- Zoom level indicator -->
+	{#if currentZoom !== 100}
+		<div class="zoom-indicator {theme === 'light' ? 'light' : ''}" 
+			 title="Current zoom level. Use Ctrl+Plus/Minus to zoom (when focused), Ctrl+0 to reset">
+			{currentZoom}%
+		</div>
+	{/if}
+</div>
