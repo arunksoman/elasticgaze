@@ -10,7 +10,8 @@
 		splitterSize = 8,
 		className = '',
 		panel1,
-		panel2
+		panel2,
+		onResize = null
 	} = $props();
 	
 	// State
@@ -47,7 +48,14 @@
 		}
 		
 		// Clamp percentage within bounds
-		splitPercentage = Math.max(minSize, Math.min(maxSize, percentage));
+		const newPercentage = Math.max(minSize, Math.min(maxSize, percentage));
+		if (newPercentage !== splitPercentage) {
+			splitPercentage = newPercentage;
+			// Trigger resize callback after DOM update
+			if (onResize) {
+				setTimeout(() => onResize(splitPercentage), 0);
+			}
+		}
 	}
 	
 	function handleMouseUp() {
@@ -79,7 +87,14 @@
 			percentage = (relativeX / rect.width) * 100;
 		}
 		
-		splitPercentage = Math.max(minSize, Math.min(maxSize, percentage));
+		const newPercentage = Math.max(minSize, Math.min(maxSize, percentage));
+		if (newPercentage !== splitPercentage) {
+			splitPercentage = newPercentage;
+			// Trigger resize callback after DOM update
+			if (onResize) {
+				setTimeout(() => onResize(splitPercentage), 0);
+			}
+		}
 	}
 	
 	function handleTouchEnd() {

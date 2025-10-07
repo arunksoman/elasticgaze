@@ -23,6 +23,8 @@
 	
 	let editor;
 	let container;
+	let resizeObserver;
+	let handleWindowResize;
 	
 	onMount(() => {
 		// Configure Monaco Editor
@@ -178,6 +180,36 @@
 		editor.addCommand(monaco.KeyMod.Shift | monaco.KeyMod.Alt | monaco.KeyCode.KeyF, () => {
 			formatDocument();
 		});
+		
+		// Set up ResizeObserver to handle container size changes
+		if (typeof ResizeObserver !== 'undefined') {
+			resizeObserver = new ResizeObserver((entries) => {
+				if (editor) {
+					// Multiple approaches to ensure layout updates
+					requestAnimationFrame(() => {
+						editor.layout();
+						// Force a second layout after a short delay for stubborn cases
+						setTimeout(() => {
+							editor.layout();
+						}, 100);
+					});
+				}
+			});
+			
+			// Observe the container for size changes
+			resizeObserver.observe(container);
+		}
+		
+		// Additional fallback: listen for window resize events
+		const windowResizeHandler = () => {
+			if (editor) {
+				setTimeout(() => editor.layout(), 50);
+			}
+		};
+		window.addEventListener('resize', windowResizeHandler);
+		
+		// Store reference for cleanup
+		handleWindowResize = windowResizeHandler;
 	});
 	
 	// Function to handle placeholder display
@@ -214,9 +246,14 @@
 	export { formatDocument };
 	
 	onDestroy(() => {
+		if (resizeObserver) {
+			resizeObserver.disconnect();
+		}
 		if (editor) {
 			editor.dispose();
 		}
+		// Clean up window resize listener
+		window.removeEventListener('resize', handleWindowResize);
 	});
 	
 	// Update editor when value changes externally
@@ -241,4 +278,4 @@
 	}
 </style>
 
-<div bind:this={container} style="height: {height};" class="border theme-border rounded"></div>
+<div bind:this={container} style="height: {height}; width: 100%;" class="border theme-border rounded min-h-0"></div>

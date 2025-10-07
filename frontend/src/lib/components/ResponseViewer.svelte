@@ -3,28 +3,37 @@
 	import { theme } from '$lib/theme.js';
 	
 	export let responseData = '';
-	export let height = '400px';
+	export let height = '100%';
 	export let title = 'Response';
 </script>
 
-{#if responseData}
-	<div>
-		<span class="block mb-3 theme-text-primary font-medium text-lg">{title}</span>
-		<MonacoEditor 
-			bind:value={responseData} 
-			language="json" 
-			{height}
-			readOnly={true}
-			theme={$theme}
-			fontSize={12}
-			tabSize={2}
-			wordWrap="on"
-			lineNumbers="on"
-			minimap={true}
-			formatOnPaste={false}
-			formatOnType={false}
-			folding={true}
-			showFoldingControls="always"
-		/>
+<div class="h-full flex flex-col">
+	<span class="block mb-3 theme-text-primary font-medium text-lg flex-shrink-0">{title}</span>
+	<div class="flex-1 min-h-0">
+		{#if responseData}
+			<MonacoEditor 
+				bind:value={responseData} 
+				language="json" 
+				{height}
+				readOnly={true}
+				theme={$theme}
+				fontSize={12}
+				tabSize={2}
+				wordWrap="on"
+				lineNumbers="on"
+				minimap={true}
+				formatOnPaste={false}
+				formatOnType={false}
+				folding={true}
+				showFoldingControls="always"
+			/>
+		{:else}
+			<div class="h-full border theme-border rounded flex items-center justify-center theme-bg-secondary">
+				<p class="theme-text-secondary text-center">
+					<span class="block text-sm mb-2">No response yet</span>
+					<span class="text-xs opacity-75">Send a request to see the response here</span>
+				</p>
+			</div>
+		{/if}
 	</div>
-{/if}
+</div>

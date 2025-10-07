@@ -130,6 +130,14 @@
 				isLoading = false;
 			});
 	}
+	
+	// Handle splitter resize - dispatch window resize event as backup
+	function handleSplitterResize(percentage) {
+		// Dispatch window resize event that Monaco's automaticLayout can detect
+		setTimeout(() => {
+			window.dispatchEvent(new Event('resize'));
+		}, 50);
+	}
 </script>
 
 <div class="h-screen flex flex-col">
@@ -150,6 +158,7 @@
 			minSize={25} 
 			maxSize={75}
 			className="h-full"
+			onResize={handleSplitterResize}
 		>
 			{#snippet panel1()}
 				<!-- Request Section -->

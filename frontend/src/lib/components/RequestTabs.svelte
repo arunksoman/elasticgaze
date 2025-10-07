@@ -19,9 +19,9 @@
 	}
 </script>
 
-<div class="mb-6">
+<div class="h-full flex flex-col">
 	<!-- Tab Headers -->
-	<div class="flex border-b theme-border mb-4">
+	<div class="flex border-b theme-border mb-4 flex-shrink-0">
 		<button 
 			on:click={() => setActiveTab('body')}
 			class="px-4 py-2 font-medium text-sm transition-colors border-b-2 {activeTab === 'body' ? 'border-blue-500 theme-text-primary' : 'border-transparent theme-text-secondary hover:theme-text-primary'}"
@@ -37,7 +37,7 @@
 	</div>
 	
 	<!-- Tab Content -->
-	<div class="min-h-[250px]">
+	<div class="flex-1 min-h-0">
 		{#if activeTab === 'params'}
 			<RequestParamsEditor 
 				bind:params 
