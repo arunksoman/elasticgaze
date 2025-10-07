@@ -1,6 +1,8 @@
 <script>
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 	import * as monaco from 'monaco-editor';
+	
+	const dispatch = createEventDispatcher();
 	
 	export let value = '';
 	export let language = 'json';
@@ -25,6 +27,7 @@
 	let container;
 	let resizeObserver;
 	let handleWindowResize;
+	let isUpdatingFromExternal = false;
 	
 	onMount(() => {
 		// Configure Monaco Editor
@@ -168,7 +171,11 @@
 		
 		// Listen for content changes
 		editor.onDidChangeModelContent(() => {
-			value = editor.getValue();
+			if (!isUpdatingFromExternal) {
+				const newValue = editor.getValue();
+				value = newValue;
+				dispatch('change', newValue);
+			}
 		});
 		
 		// Add placeholder functionality
@@ -267,6 +274,14 @@
 	// Update theme when it changes
 	$: if (editor) {
 		monaco.editor.setTheme(theme === 'dark' ? 'custom-dark' : 'custom-light');
+	}
+	
+	// Handle external value changes (avoid binding issues)
+	$: if (editor && editor.getValue() !== value) {
+		isUpdatingFromExternal = true;
+		editor.setValue(value || '');
+		updatePlaceholder();
+		isUpdatingFromExternal = false;
 	}
 </script>
 

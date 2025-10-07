@@ -7,7 +7,7 @@
 	
 	export let activeTab = 'body';
 	export let params = [];
-	export let requestBody = '{\n  "query": {\n    "match_all": {}\n  }\n}';
+	export let requestBody = '';  // No default request body
 	
 	function setActiveTab(tab) {
 		activeTab = tab;
@@ -16,6 +16,11 @@
 	function handleParamsChange(event) {
 		params = event.detail;
 		dispatch('paramsChange', params);
+	}
+	
+	function handleRequestBodyChange(event) {
+		requestBody = event.detail;
+		dispatch('requestBodyChange', requestBody);
 	}
 </script>
 
@@ -40,13 +45,14 @@
 	<div class="flex-1 min-h-0">
 		{#if activeTab === 'params'}
 			<RequestParamsEditor 
-				bind:params 
+				{params}
 				on:paramsChange={handleParamsChange}
 			/>
 		{:else if activeTab === 'body'}
 			<RequestBodyEditor 
-				bind:requestBody 
+				{requestBody}
 				title=""
+				on:change={handleRequestBodyChange}
 			/>
 		{/if}
 	</div>

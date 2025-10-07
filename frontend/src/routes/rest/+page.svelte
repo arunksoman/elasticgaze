@@ -4,15 +4,19 @@
 	import ResponseViewer from '$lib/components/ResponseViewer.svelte';
 	import ResizableSplitter from '$lib/components/ResizableSplitter.svelte';
 	import { ExecuteElasticsearchRequest } from '$lib/wailsjs/go/main/App.js';
+	import { restStore } from '$lib/stores/restStore.js';
 	
-	// REST page component
-	let method = 'GET';
-	let endpoint = '';
-	let baseEndpoint = '';
-	let params = [];
-	let requestBody = '{\n  "query": {\n    "match_all": {}\n  }\n}';
-	let responseData = '';
-	let isLoading = false;
+	// Use the store directly instead of local state variables
+	let storeValue = $state({});
+	
+	// Initialize from store
+	$effect(() => {
+		const unsubscribe = restStore.subscribe(store => {
+			storeValue = store;
+		});
+		
+		return unsubscribe;
+	});
 	
 	// Function to build URL with parameters
 	function buildUrlWithParams(base, parameters) {
@@ -47,49 +51,36 @@
 		return { base, params };
 	}
 	
-	// Watch for endpoint changes to update base and params
-	let lastBuiltUrl = '';
-	$: {
-		const currentBuiltUrl = buildUrlWithParams(baseEndpoint, params);
-		if (endpoint !== currentBuiltUrl && endpoint !== lastBuiltUrl) {
-			const parsed = parseUrl(endpoint);
-			baseEndpoint = parsed.base;
-			params = parsed.params;
-		}
-		lastBuiltUrl = currentBuiltUrl;
-	}
-	
-	// Watch for params changes to update endpoint
+	// Handle params changes to update endpoint
 	function handleParamsChange(event) {
-		params = event.detail;
-		const newUrl = buildUrlWithParams(baseEndpoint, params);
-		if (newUrl !== endpoint) {
-			endpoint = newUrl;
-			lastBuiltUrl = newUrl;
+		const newParams = event.detail;
+		restStore.setParams(newParams);
+		const newUrl = buildUrlWithParams(storeValue.baseEndpoint, newParams);
+		if (newUrl !== storeValue.endpoint) {
+			restStore.setEndpoint(newUrl);
 		}
 	}
 	
-	// Watch for base endpoint changes in the input
-	$: {
-		// Extract base endpoint when user types directly in URL input
-		if (endpoint && !endpoint.includes('?')) {
-			baseEndpoint = endpoint;
-		}
+	// Handle endpoint changes - parse and update base + params when user types URL directly
+	function handleEndpointChange(newEndpoint) {
+		restStore.setEndpoint(newEndpoint);
+		const parsed = parseUrl(newEndpoint);
+		restStore.setBaseEndpoint(parsed.base);
+		restStore.setParams(parsed.params);
 	}
-	
 	function handleRequest(event) {
 		const { method: requestMethod, endpoint: requestEndpoint } = event.detail;
 		
-		// Set loading state
-		isLoading = true;
+		// Set loading state in store
+		restStore.setLoading(true);
 		
-		console.log('REST Request:', requestMethod, requestEndpoint, requestBody);
+		console.log('REST Request:', requestMethod, requestEndpoint, storeValue.requestBody);
 		
 		// Prepare the request object for the Go backend
 		const esRequest = {
 			method: requestMethod,
 			endpoint: requestEndpoint,
-			body: requestBody && requestBody.trim() ? requestBody : null
+			body: storeValue.requestBody && storeValue.requestBody.trim() ? storeValue.requestBody : null
 		};
 		
 		// Call the Go function
@@ -97,14 +88,15 @@
 			.then(response => {
 				console.log('ES Response:', response);
 				
+				let finalResponseData;
 				if (response.success) {
 					// Parse and pretty-print the response
 					try {
 						const parsedResponse = JSON.parse(response.response);
-						responseData = JSON.stringify(parsedResponse, null, 2);
+						finalResponseData = JSON.stringify(parsedResponse, null, 2);
 					} catch (e) {
 						// If it's not JSON, just display as-is
-						responseData = response.response;
+						finalResponseData = response.response;
 					}
 				} else {
 					// Show error response
@@ -114,8 +106,11 @@
 						error_code: response.error_code,
 						error_details: response.error_details
 					};
-					responseData = JSON.stringify(errorResponse, null, 2);
+					finalResponseData = JSON.stringify(errorResponse, null, 2);
 				}
+				
+				// Update response data in store
+				restStore.setResponseData(finalResponseData);
 			})
 			.catch(error => {
 				console.error('Request failed:', error);
@@ -124,10 +119,11 @@
 					message: 'Request failed',
 					details: error.toString()
 				};
-				responseData = JSON.stringify(errorResponse, null, 2);
+				const finalResponseData = JSON.stringify(errorResponse, null, 2);
+				restStore.setResponseData(finalResponseData);
 			})
 			.finally(() => {
-				isLoading = false;
+				restStore.setLoading(false);
 			});
 	}
 	
@@ -145,9 +141,11 @@
 		<h1 class="text-2xl font-medium mb-6 theme-text-primary">REST API</h1>
 		
 		<RestRequestForm 
-			bind:method 
-			bind:endpoint 
-			{isLoading}
+			method={storeValue.method}
+			endpoint={storeValue.endpoint}
+			isLoading={storeValue.isLoading}
+			on:methodChange={(e) => restStore.setMethod(e.detail)}
+			on:endpointChange={(e) => handleEndpointChange(e.detail)}
 			on:send={handleRequest}
 		/>
 	</div>
@@ -164,9 +162,10 @@
 				<!-- Request Section -->
 				<div class="h-full flex flex-col">
 					<RequestTabs 
-						bind:params 
-						bind:requestBody 
+						params={storeValue.params}
+						requestBody={storeValue.requestBody}
 						on:paramsChange={handleParamsChange}
+						on:requestBodyChange={(e) => restStore.setRequestBody(e.detail)}
 					/>
 				</div>
 			{/snippet}
@@ -174,7 +173,7 @@
 			{#snippet panel2()}
 				<!-- Response Section -->
 				<div class="h-full flex flex-col">
-					<ResponseViewer {responseData} />
+					<ResponseViewer responseData={storeValue.responseData} />
 				</div>
 			{/snippet}
 		</ResizableSplitter>

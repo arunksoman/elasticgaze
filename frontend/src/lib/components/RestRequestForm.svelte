@@ -15,12 +15,22 @@
 			endpoint
 		});
 	}
+	
+	function handleMethodChange(newMethod) {
+		method = newMethod;
+		dispatch('methodChange', newMethod);
+	}
+	
+	function handleEndpointChange(newEndpoint) {
+		endpoint = newEndpoint;
+		dispatch('endpointChange', newEndpoint);
+	}
 </script>
 
 <!-- URL and Method Section -->
 <div class="flex gap-3 mb-6">
-	<RequestMethodSelector bind:method />
-	<RequestUrlInput bind:endpoint />
+	<RequestMethodSelector {method} on:change={(e) => handleMethodChange(e.detail)} />
+	<RequestUrlInput {endpoint} on:change={(e) => handleEndpointChange(e.detail)} />
 	<button 
 		on:click={handleSendRequest}
 		disabled={isLoading}

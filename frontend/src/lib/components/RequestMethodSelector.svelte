@@ -1,4 +1,8 @@
 <script>
+	import { createEventDispatcher } from 'svelte';
+	
+	const dispatch = createEventDispatcher();
+	
 	export let method = 'GET';
 	
 	// Postman-style method colors
@@ -14,10 +18,16 @@
 		};
 		return colors[methodName] || 'text-gray-400';
 	}
+	
+	function handleChange(event) {
+		method = event.target.value;
+		dispatch('change', method);
+	}
 </script>
 
 <select 
-	bind:value={method}
+	value={method}
+	on:change={handleChange}
 	class={`border theme-border p-2 theme-bg-tertiary rounded font-semibold ${getMethodColor(method)} min-w-[100px]`}
 >
 	<option value="GET" class="text-green-500 font-semibold">GET</option>
