@@ -2,6 +2,7 @@
 	import RestRequestForm from '$lib/components/RestRequestForm.svelte';
 	import RequestTabs from '$lib/components/RequestTabs.svelte';
 	import ResponseViewer from '$lib/components/ResponseViewer.svelte';
+	import ResizableSplitter from '$lib/components/ResizableSplitter.svelte';
 	import { ExecuteElasticsearchRequest } from '$lib/wailsjs/go/main/App.js';
 	
 	// REST page component
@@ -131,21 +132,42 @@
 	}
 </script>
 
-<div class="p-6">
-	<h1 class="text-2xl font-medium mb-6 theme-text-primary">REST API</h1>
+<div class="h-screen flex flex-col">
+	<div class="p-6 pb-0 flex-shrink-0">
+		<h1 class="text-2xl font-medium mb-6 theme-text-primary">REST API</h1>
+		
+		<RestRequestForm 
+			bind:method 
+			bind:endpoint 
+			{isLoading}
+			on:send={handleRequest}
+		/>
+	</div>
 	
-	<RestRequestForm 
-		bind:method 
-		bind:endpoint 
-		{isLoading}
-		on:send={handleRequest}
-	/>
-	
-	<RequestTabs 
-		bind:params 
-		bind:requestBody 
-		on:paramsChange={handleParamsChange}
-	/>
-	
-	<ResponseViewer {responseData} />
+	<div class="flex-1 p-6 pt-0 min-h-0">
+		<ResizableSplitter 
+			defaultSplit={45} 
+			minSize={25} 
+			maxSize={75}
+			className="h-full"
+		>
+			{#snippet panel1()}
+				<!-- Request Section -->
+				<div class="h-full flex flex-col">
+					<RequestTabs 
+						bind:params 
+						bind:requestBody 
+						on:paramsChange={handleParamsChange}
+					/>
+				</div>
+			{/snippet}
+			
+			{#snippet panel2()}
+				<!-- Response Section -->
+				<div class="h-full flex flex-col">
+					<ResponseViewer {responseData} />
+				</div>
+			{/snippet}
+		</ResizableSplitter>
+	</div>
 </div>
