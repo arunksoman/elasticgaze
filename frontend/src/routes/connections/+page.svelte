@@ -415,7 +415,7 @@
 	}
 </script>
 
-<div class="p-6">
+<div class="w-full max-w-6xl mx-auto mt-2">
 	<div class="flex items-center gap-4 mb-6">
 		<button 
 			onclick={goBack}

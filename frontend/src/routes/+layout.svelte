@@ -253,7 +253,7 @@
 	<SidebarMenu bind:currentTheme />
 	
 	<!-- Main Content -->
-	<main class="flex-1 overflow-auto p-6 transition-all duration-300 relative">
+	<main class="flex-1 overflow-auto p-6 pt-12 transition-all duration-300 relative">
 		{#if shouldShowWarning()}
 			<div class="transition-all duration-500 ease-in-out">
 				<ConnectionWarning 

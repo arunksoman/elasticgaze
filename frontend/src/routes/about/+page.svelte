@@ -19,7 +19,7 @@
 	});
 </script>
 
-<div class="p-6 relative min-h-full">
+<div class="w-full max-w-6xl mx-auto mt-2">
 	<h1 class="text-2xl font-medium mb-6 theme-text-primary">About ElasticGaze</h1>
 	
 	<!-- Project Inspiration Section -->

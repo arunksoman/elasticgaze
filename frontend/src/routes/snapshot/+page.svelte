@@ -2,7 +2,7 @@
 	// Snapshot page component
 </script>
 
-<div class="p-6">
+<div class="w-full max-w-6xl mx-auto mt-2">
 	<h1 class="text-2xl font-medium mb-4 theme-text-primary">Snapshots</h1>
 	<p class="mb-4 theme-text-secondary">View and manage your Elasticsearch snapshots</p>
 	

@@ -12,7 +12,7 @@
 	}
 </script>
 
-<div class="p-6">
+<div class="w-full max-w-6xl mx-auto mt-2">
 	<h1 class="text-2xl font-medium mb-4 theme-text-primary">Search</h1>
 	<div class="mb-4">
 		<form onsubmit={(e) => { e.preventDefault(); handleSearch(); }} class="flex gap-2">

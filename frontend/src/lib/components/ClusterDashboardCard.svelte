@@ -102,7 +102,7 @@
 	});
 </script>
 
-<div class="w-full max-w-6xl mx-auto mt-8">
+<div class="w-full max-w-6xl mx-auto mt-2">
 	<!-- Simple Card with Toggle -->
 	<div class="overflow-hidden">
 		

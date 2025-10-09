@@ -2,7 +2,7 @@
 	// Indices page component
 </script>
 
-<div class="p-6">
+<div class="w-full max-w-6xl mx-auto mt-2">
 	<h1 class="text-2xl font-medium mb-4 theme-text-primary">Indices</h1>
 	<p class="mb-4 theme-text-secondary">View and manage your Elasticsearch indices</p>
 	<div class="border theme-border p-4 mb-4 rounded">
