@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"embed"
+	"os"
+	"path/filepath"
+
+	"elasticgaze/internal/logging"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -13,11 +17,24 @@ import (
 var assets embed.FS
 
 func main() {
+	// Initialize logger early for Wails
+	appDataDir, err := os.UserConfigDir()
+	if err != nil {
+		panic("Failed to get user config directory: " + err.Error())
+	}
+	elasticGazeDir := filepath.Join(appDataDir, "elasticgaze")
+
+	// Initialize Wails-compatible logger
+	wailsLogger, err := logging.InitLogger(elasticGazeDir)
+	if err != nil {
+		panic("Failed to initialize logger: " + err.Error())
+	}
+
 	// Create an instance of the app structure
 	app := NewApp()
 
 	// Create application with options
-	err := wails.Run(&options.App{
+	err = wails.Run(&options.App{
 		Title:            "ElasticGaze",
 		Width:            800,
 		Height:           600,
@@ -25,6 +42,7 @@ func main() {
 		WindowStartState: options.Normal,
 		MinWidth:         800,
 		MinHeight:        600,
+		Logger:           wailsLogger, // Register our custom logger with Wails
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
@@ -33,7 +51,7 @@ func main() {
 		OnShutdown: func(ctx context.Context) {
 			// Ensure database connection is properly closed on shutdown
 			if err := app.Close(); err != nil {
-				println("Error closing database:", err.Error())
+				logging.Error("Error closing database:", err.Error())
 			}
 		},
 		Bind: []interface{}{
@@ -42,6 +60,6 @@ func main() {
 	})
 
 	if err != nil {
-		println("Error:", err.Error())
+		logging.Error("Error:", err.Error())
 	}
 }

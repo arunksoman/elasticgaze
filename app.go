@@ -10,6 +10,8 @@ import (
 	"elasticgaze/internal/models"
 	"elasticgaze/internal/repository"
 	"elasticgaze/internal/service"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -32,10 +34,14 @@ func (a *App) startup(ctx context.Context) {
 
 	// Initialize database
 	if err := a.initDatabase(); err != nil {
+		runtime.LogErrorf(ctx, "Failed to initialize database: %v", err)
 		fmt.Printf("Failed to initialize database: %v\n", err)
 		// You might want to handle this more gracefully
 		os.Exit(1)
 	}
+
+	// Logger is already initialized in main.go, just log that we're ready
+	runtime.LogInfo(ctx, "ElasticGaze application startup completed successfully")
 }
 
 // initDatabase initializes the SQLite database and services
@@ -73,6 +79,7 @@ func (a *App) initDatabase() error {
 
 // Close closes the database connection
 func (a *App) Close() error {
+	runtime.LogInfo(a.ctx, "Closing application and database connection")
 	if a.db != nil {
 		return a.db.Close()
 	}
@@ -88,7 +95,14 @@ func (a *App) Greet(name string) string {
 
 // CreateConfig creates a new Elasticsearch connection configuration
 func (a *App) CreateConfig(req *models.CreateConfigRequest) (*models.Config, error) {
-	return a.configService.CreateConfig(req)
+	runtime.LogInfof(a.ctx, "Creating new Elasticsearch configuration: %s", req.ConnectionName)
+	config, err := a.configService.CreateConfig(req)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to create configuration: %v", err)
+		return nil, err
+	}
+	runtime.LogInfof(a.ctx, "Successfully created configuration with ID: %d", config.ID)
+	return config, nil
 }
 
 // GetConfigByID retrieves a configuration by ID
@@ -118,7 +132,18 @@ func (a *App) DeleteConfig(id int) error {
 
 // TestConnection tests an Elasticsearch connection
 func (a *App) TestConnection(req *models.TestConnectionRequest) (*models.TestConnectionResponse, error) {
-	return a.esService.TestConnection(req)
+	runtime.LogInfof(a.ctx, "Testing Elasticsearch connection to %s:%s", req.Host, req.Port)
+	response, err := a.esService.TestConnection(req)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Connection test failed: %v", err)
+		return response, err
+	}
+	if response.Success {
+		runtime.LogInfo(a.ctx, "Connection test successful")
+	} else {
+		runtime.LogWarningf(a.ctx, "Connection test failed: %s", response.Message)
+	}
+	return response, nil
 }
 
 // HasDefaultConfig checks if there is a default connection configured

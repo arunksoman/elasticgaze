@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"elasticgaze/internal/logging"
+
 	_ "modernc.org/sqlite"
 )
 
@@ -62,7 +64,7 @@ func (db *DB) Close() error {
 		// Execute checkpoint to flush WAL to main database file
 		if _, err := db.conn.Exec("PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
 			// Log warning but don't fail the close operation
-			fmt.Printf("Warning: failed to checkpoint WAL: %v\n", err)
+			logging.Warnf("Failed to checkpoint WAL: %v", err)
 		}
 
 		err := db.conn.Close()

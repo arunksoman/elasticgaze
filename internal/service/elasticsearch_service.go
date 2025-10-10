@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"elasticgaze/internal/logging"
 	"elasticgaze/internal/models"
 )
 
@@ -38,12 +38,12 @@ func NewElasticsearchService() *ElasticsearchService {
 
 // TestConnection tests the connection to an Elasticsearch cluster
 func (s *ElasticsearchService) TestConnection(req *models.TestConnectionRequest) (*models.TestConnectionResponse, error) {
-	log.Printf("🔍 Testing Elasticsearch connection to %s:%s (SSL: %v, Auth: %s)",
+	logging.Infof("🔍 Testing Elasticsearch connection to %s:%s (SSL: %v, Auth: %s)",
 		req.Host, req.Port, req.SSLOrHTTPS, req.AuthenticationMethod)
 
 	// Validate the request
 	if err := req.Validate(); err != nil {
-		log.Printf("❌ Connection test validation failed: %v", err)
+		logging.Errorf("❌ Connection test validation failed: %v", err)
 		return &models.TestConnectionResponse{
 			Success:      false,
 			Message:      "Validation failed",
@@ -54,12 +54,12 @@ func (s *ElasticsearchService) TestConnection(req *models.TestConnectionRequest)
 
 	// Build the URL
 	url := s.buildURL(req, "/")
-	log.Printf("🌐 Connection URL: %s", url)
+	logging.Infof("🌐 Connection URL: %s", url)
 
 	// Create HTTP request
 	httpReq, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Printf("❌ Failed to create HTTP request: %v", err)
+		logging.Errorf("❌ Failed to create HTTP request: %v", err)
 		return &models.TestConnectionResponse{
 			Success:      false,
 			Message:      "Failed to create request",
@@ -70,7 +70,7 @@ func (s *ElasticsearchService) TestConnection(req *models.TestConnectionRequest)
 
 	// Add authentication
 	if err := s.addAuthentication(httpReq, req); err != nil {
-		log.Printf("❌ Authentication setup failed: %v", err)
+		logging.Errorf("❌ Authentication setup failed: %v", err)
 		return &models.TestConnectionResponse{
 			Success:      false,
 			Message:      "Authentication setup failed",
@@ -83,19 +83,19 @@ func (s *ElasticsearchService) TestConnection(req *models.TestConnectionRequest)
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("User-Agent", "ElasticGaze/1.0")
 
-	log.Printf("🔐 Authentication method: %s", req.AuthenticationMethod)
+	logging.Infof("🔐 Authentication method: %s", req.AuthenticationMethod)
 	if req.AuthenticationMethod == "basic" && req.Username != nil {
-		log.Printf("👤 Username: %s", *req.Username)
+		logging.Infof("👤 Username: %s", *req.Username)
 	}
 
 	// Make the request
-	log.Printf("🚀 Making HTTP request...")
+	logging.Info("🚀 Making HTTP request...")
 	start := time.Now()
 	resp, err := s.client.Do(httpReq)
 	duration := time.Since(start)
 
 	if err != nil {
-		log.Printf("❌ HTTP request failed after %v: %v", duration, err)
+		logging.Errorf("❌ HTTP request failed after %v: %v", duration, err)
 		errorDetails := fmt.Sprintf("Connection failed after %v\nURL: %s\nError: %v", duration, url, err)
 
 		// Check for specific error types
@@ -116,12 +116,12 @@ func (s *ElasticsearchService) TestConnection(req *models.TestConnectionRequest)
 	}
 	defer resp.Body.Close()
 
-	log.Printf("✅ HTTP response received after %v - Status: %d %s", duration, resp.StatusCode, resp.Status)
+	logging.Infof("✅ HTTP response received after %v - Status: %d %s", duration, resp.StatusCode, resp.Status)
 
 	// Read response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("❌ Failed to read response body: %v", err)
+		logging.Errorf("❌ Failed to read response body: %v", err)
 		return &models.TestConnectionResponse{
 			Success:      false,
 			Message:      "Failed to read response",
@@ -130,11 +130,11 @@ func (s *ElasticsearchService) TestConnection(req *models.TestConnectionRequest)
 		}, nil
 	}
 
-	log.Printf("📄 Response body length: %d bytes", len(body))
+	logging.Infof("📄 Response body length: %d bytes", len(body))
 
 	// Check status code
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("❌ HTTP error status %d: %s", resp.StatusCode, string(body))
+		logging.Errorf("❌ HTTP error status %d: %s", resp.StatusCode, string(body))
 		errorDetails := fmt.Sprintf("HTTP %d %s\nURL: %s\nResponse: %s",
 			resp.StatusCode, resp.Status, url, string(body))
 
@@ -182,8 +182,8 @@ func (s *ElasticsearchService) TestConnection(req *models.TestConnectionRequest)
 	}
 
 	if err := json.Unmarshal(body, &esInfo); err != nil {
-		log.Printf("⚠️ Response parsing failed (connection still successful): %v", err)
-		log.Printf("📄 Raw response: %s", string(body))
+		logging.Warnf("⚠️ Response parsing failed (connection still successful): %v", err)
+		logging.Infof("📄 Raw response: %s", string(body))
 		// Connection succeeded but response parsing failed
 		return &models.TestConnectionResponse{
 			Success:   true,
@@ -193,11 +193,11 @@ func (s *ElasticsearchService) TestConnection(req *models.TestConnectionRequest)
 	}
 
 	// Success!
-	log.Printf("🎉 Connection test successful!")
-	log.Printf("🏷️  Cluster Name: %s", esInfo.ClusterName)
-	log.Printf("🏷️  Cluster UUID: %s", esInfo.ClusterUUID)
-	log.Printf("📦 Elasticsearch Version: %s (%s)", esInfo.Version.Number, esInfo.Version.BuildFlavor)
-	log.Printf("🏗️  Build: %s (%s)", esInfo.Version.BuildHash[:8], esInfo.Version.BuildDate)
+	logging.Info("🎉 Connection test successful!")
+	logging.Infof("🏷️  Cluster Name: %s", esInfo.ClusterName)
+	logging.Infof("🏷️  Cluster UUID: %s", esInfo.ClusterUUID)
+	logging.Infof("📦 Elasticsearch Version: %s (%s)", esInfo.Version.Number, esInfo.Version.BuildFlavor)
+	logging.Infof("🏗️  Build: %s (%s)", esInfo.Version.BuildHash[:8], esInfo.Version.BuildDate)
 
 	return &models.TestConnectionResponse{
 		Success:     true,
@@ -209,7 +209,7 @@ func (s *ElasticsearchService) TestConnection(req *models.TestConnectionRequest)
 
 // GetClusterDashboardData fetches all cluster data needed for the dashboard
 func (s *ElasticsearchService) GetClusterDashboardData(config *models.Config) (*models.ProcessedDashboardData, error) {
-	log.Printf("🔍 Fetching cluster dashboard data for %s", config.ConnectionName)
+	logging.Infof("🔍 Fetching cluster dashboard data for %s", config.ConnectionName)
 
 	// Create test connection request from config
 	testReq := &models.TestConnectionRequest{
@@ -248,7 +248,7 @@ func (s *ElasticsearchService) GetClusterDashboardData(config *models.Config) (*
 	// Process the data
 	processedData := s.processClusterData(clusterInfo, clusterHealth, nodesInfo, indicesStats)
 
-	log.Printf("✅ Successfully fetched cluster dashboard data")
+	logging.Info("✅ Successfully fetched cluster dashboard data")
 	return processedData, nil
 }
 
@@ -460,11 +460,11 @@ func formatBytes(bytes int64) string {
 
 // ExecuteRestRequest executes a generic REST request to the default Elasticsearch cluster
 func (s *ElasticsearchService) ExecuteRestRequest(config *models.Config, req *models.ElasticsearchRestRequest) (*models.ElasticsearchRestResponse, error) {
-	log.Printf("🔍 Executing ES REST request: %s %s", req.Method, req.Endpoint)
+	logging.Infof("🔍 Executing ES REST request: %s %s", req.Method, req.Endpoint)
 
 	// Validate the request
 	if err := req.Validate(); err != nil {
-		log.Printf("❌ REST request validation failed: %v", err)
+		logging.Errorf("❌ REST request validation failed: %v", err)
 		return &models.ElasticsearchRestResponse{
 			Success:      false,
 			StatusCode:   400,
@@ -491,19 +491,19 @@ func (s *ElasticsearchService) ExecuteRestRequest(config *models.Config, req *mo
 
 	// Build the URL
 	url := s.buildURL(connReq, endpoint)
-	log.Printf("🌐 Request URL: %s", url)
+	logging.Infof("🌐 Request URL: %s", url)
 
 	// Prepare request body
 	var body io.Reader
 	if req.Body != nil && strings.TrimSpace(*req.Body) != "" {
 		body = bytes.NewBufferString(*req.Body)
-		log.Printf("📄 Request body: %s", *req.Body)
+		logging.Infof("📄 Request body: %s", *req.Body)
 	}
 
 	// Create HTTP request
 	httpReq, err := http.NewRequest(strings.ToUpper(req.Method), url, body)
 	if err != nil {
-		log.Printf("❌ Failed to create HTTP request: %v", err)
+		logging.Errorf("❌ Failed to create HTTP request: %v", err)
 		return &models.ElasticsearchRestResponse{
 			Success:      false,
 			StatusCode:   500,
@@ -514,7 +514,7 @@ func (s *ElasticsearchService) ExecuteRestRequest(config *models.Config, req *mo
 
 	// Add authentication
 	if err := s.addAuthentication(httpReq, connReq); err != nil {
-		log.Printf("❌ Authentication setup failed: %v", err)
+		logging.Errorf("❌ Authentication setup failed: %v", err)
 		return &models.ElasticsearchRestResponse{
 			Success:      false,
 			StatusCode:   401,
@@ -528,13 +528,13 @@ func (s *ElasticsearchService) ExecuteRestRequest(config *models.Config, req *mo
 	httpReq.Header.Set("User-Agent", "ElasticGaze/1.0")
 
 	// Make the request
-	log.Printf("🚀 Making HTTP request...")
+	logging.Info("🚀 Making HTTP request...")
 	start := time.Now()
 	resp, err := s.client.Do(httpReq)
 	duration := time.Since(start)
 
 	if err != nil {
-		log.Printf("❌ HTTP request failed after %v: %v", duration, err)
+		logging.Errorf("❌ HTTP request failed after %v: %v", duration, err)
 		return &models.ElasticsearchRestResponse{
 			Success:      false,
 			StatusCode:   500,
@@ -544,12 +544,12 @@ func (s *ElasticsearchService) ExecuteRestRequest(config *models.Config, req *mo
 	}
 	defer resp.Body.Close()
 
-	log.Printf("📊 Response status: %d, Duration: %v", resp.StatusCode, duration)
+	logging.Infof("📊 Response status: %d, Duration: %v", resp.StatusCode, duration)
 
 	// Read response body
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("❌ Failed to read response body: %v", err)
+		logging.Errorf("❌ Failed to read response body: %v", err)
 		return &models.ElasticsearchRestResponse{
 			Success:      false,
 			StatusCode:   resp.StatusCode,
@@ -561,9 +561,9 @@ func (s *ElasticsearchService) ExecuteRestRequest(config *models.Config, req *mo
 	// Check if the response is successful (2xx status codes)
 	success := resp.StatusCode >= 200 && resp.StatusCode < 300
 	if !success {
-		log.Printf("⚠️ Elasticsearch returned error status %d", resp.StatusCode)
+		logging.Warnf("⚠️ Elasticsearch returned error status %d", resp.StatusCode)
 	} else {
-		log.Printf("✅ Request completed successfully")
+		logging.Info("✅ Request completed successfully")
 	}
 
 	return &models.ElasticsearchRestResponse{
