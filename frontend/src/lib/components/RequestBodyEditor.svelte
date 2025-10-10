@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import MonacoEditor from '$lib/MonacoEditor.svelte';
+	import LazyMonacoEditor from './LazyMonacoEditor.svelte';
 	import { theme } from '$lib/theme.js';
 	
 	const dispatch = createEventDispatcher();
@@ -21,7 +21,7 @@
 <div class="mb-6 h-full flex flex-col">
 	<span class="block mb-3 theme-text-primary font-medium text-lg flex-shrink-0">{title}</span>
 	<div class="flex-1 min-h-0">
-		<MonacoEditor 
+		<LazyMonacoEditor 
 			value={requestBody}
 			language="json" 
 			{height}
@@ -34,6 +34,8 @@
 			folding={true}
 			showFoldingControls="always"
 			placeholder="Enter your JSON request body here..."
+			loadingHeight={height}
+			loadingText="Loading request editor..."
 			on:change={handleChange}
 		/>
 	</div>

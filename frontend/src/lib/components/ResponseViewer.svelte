@@ -1,5 +1,5 @@
 <script>
-	import MonacoEditor from '$lib/MonacoEditor.svelte';
+	import LazyMonacoEditor from './LazyMonacoEditor.svelte';
 	import { theme } from '$lib/theme.js';
 	
 	// Use $props() for Svelte 5 runes mode
@@ -14,7 +14,7 @@
 	<span class="block mb-3 theme-text-primary font-medium text-lg flex-shrink-0">{title}</span>
 	<div class="flex-1 min-h-0">
 		{#if responseData}
-			<MonacoEditor 
+			<LazyMonacoEditor 
 				value={responseData} 
 				language="json" 
 				{height}
@@ -29,6 +29,8 @@
 				formatOnType={false}
 				folding={true}
 				showFoldingControls="always"
+				loadingHeight={height}
+				loadingText="Loading response viewer..."
 			/>
 		{:else}
 			<div class="h-full border theme-border rounded flex items-center justify-center theme-bg-secondary">
