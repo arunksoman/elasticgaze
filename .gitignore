@@ -2,3 +2,5 @@ build/bin
 node_modules
 frontend/build
 instructions
+elasticgaze.exe
+.github/copilot-instructions.md

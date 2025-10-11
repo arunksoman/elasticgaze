@@ -100,6 +100,10 @@
 		updateTabData({ requestBody: event.detail });
 	}
 	
+	function handleDescriptionChange(event) {
+		updateTabData({ description: event.detail });
+	}
+	
 	function handleRequest(event) {
 		if (!activeTab) return;
 		
@@ -209,8 +213,10 @@
 							<RequestTabs 
 								params={activeTab.data.params}
 								requestBody={activeTab.data.requestBody}
+								description={activeTab.data.description}
 								on:paramsChange={handleParamsChange}
 								on:requestBodyChange={handleRequestBodyChange}
+								on:descriptionChange={handleDescriptionChange}
 							/>
 						</div>
 					{/snippet}

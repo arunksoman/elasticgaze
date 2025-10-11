@@ -11,6 +11,7 @@ const createTab = (id) => ({
 		baseEndpoint: '',
 		params: [],
 		requestBody: '',
+		description: '',
 		responseData: '',
 		isLoading: false
 	}

@@ -42,6 +42,7 @@
 		]
 	},
 	"dependencies": {
+		"marked": "^16.4.0",
 		"monaco-editor": "^0.53.0"
 	}
 }
