@@ -7,11 +7,29 @@ export function ClearAllMonacoCache():Promise<void>;
 
 export function Close():Promise<void>;
 
+export function CreateCollection(arg1:models.CreateCollectionRequest):Promise<models.Collection>;
+
 export function CreateConfig(arg1:models.CreateConfigRequest):Promise<models.Config>;
+
+export function CreateFolder(arg1:models.CreateFolderRequest):Promise<models.Folder>;
+
+export function CreateRestRequest(arg1:models.CreateRequestRequest):Promise<models.Request>;
+
+export function DeleteCollection(arg1:number):Promise<void>;
 
 export function DeleteConfig(arg1:number):Promise<void>;
 
+export function DeleteFolder(arg1:number):Promise<void>;
+
+export function DeleteRestRequest(arg1:number):Promise<void>;
+
+export function EnsureDefaultCollection():Promise<models.Collection>;
+
 export function ExecuteElasticsearchRequest(arg1:models.ElasticsearchRestRequest):Promise<models.ElasticsearchRestResponse>;
+
+export function GetAllCollectionTrees():Promise<Array<models.CollectionTreeNode>>;
+
+export function GetAllCollections():Promise<Array<models.Collection>>;
 
 export function GetAllConfigs():Promise<Array<models.Config>>;
 
@@ -21,13 +39,27 @@ export function GetClusterDashboardDataByConfig(arg1:number):Promise<models.Proc
 
 export function GetClusterHealthForAllConfigs():Promise<Record<string, string>>;
 
+export function GetCollectionByID(arg1:number):Promise<models.Collection>;
+
+export function GetCollectionTree(arg1:number):Promise<models.CollectionTreeNode>;
+
 export function GetConfigByID(arg1:number):Promise<models.Config>;
 
 export function GetDefaultConfig():Promise<models.Config>;
 
+export function GetFolderByID(arg1:number):Promise<models.Folder>;
+
+export function GetFoldersByCollectionID(arg1:number):Promise<Array<models.Folder>>;
+
 export function GetMonacoCacheInfo(arg1:string):Promise<service.CacheInfo>;
 
 export function GetMonacoCacheSize():Promise<number>;
+
+export function GetRestRequestByID(arg1:number):Promise<models.Request>;
+
+export function GetRestRequestsByCollectionID(arg1:number):Promise<Array<models.Request>>;
+
+export function GetRestRequestsByFolderID(arg1:number):Promise<Array<models.Request>>;
 
 export function Greet(arg1:string):Promise<string>;
 
@@ -41,6 +73,12 @@ export function TestConnection(arg1:models.TestConnectionRequest):Promise<models
 
 export function TestDefaultConnection():Promise<models.TestConnectionResponse>;
 
+export function UpdateCollection(arg1:number,arg2:models.UpdateCollectionRequest):Promise<models.Collection>;
+
 export function UpdateConfig(arg1:number,arg2:models.UpdateConfigRequest):Promise<models.Config>;
+
+export function UpdateFolder(arg1:number,arg2:models.UpdateFolderRequest):Promise<models.Folder>;
+
+export function UpdateRestRequest(arg1:number,arg2:models.UpdateRequestRequest):Promise<models.Request>;
 
 export function WriteMonacoCache(arg1:string,arg2:string):Promise<void>;

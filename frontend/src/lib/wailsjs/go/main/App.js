@@ -10,16 +10,52 @@ export function Close() {
   return window['go']['main']['App']['Close']();
 }
 
+export function CreateCollection(arg1) {
+  return window['go']['main']['App']['CreateCollection'](arg1);
+}
+
 export function CreateConfig(arg1) {
   return window['go']['main']['App']['CreateConfig'](arg1);
+}
+
+export function CreateFolder(arg1) {
+  return window['go']['main']['App']['CreateFolder'](arg1);
+}
+
+export function CreateRestRequest(arg1) {
+  return window['go']['main']['App']['CreateRestRequest'](arg1);
+}
+
+export function DeleteCollection(arg1) {
+  return window['go']['main']['App']['DeleteCollection'](arg1);
 }
 
 export function DeleteConfig(arg1) {
   return window['go']['main']['App']['DeleteConfig'](arg1);
 }
 
+export function DeleteFolder(arg1) {
+  return window['go']['main']['App']['DeleteFolder'](arg1);
+}
+
+export function DeleteRestRequest(arg1) {
+  return window['go']['main']['App']['DeleteRestRequest'](arg1);
+}
+
+export function EnsureDefaultCollection() {
+  return window['go']['main']['App']['EnsureDefaultCollection']();
+}
+
 export function ExecuteElasticsearchRequest(arg1) {
   return window['go']['main']['App']['ExecuteElasticsearchRequest'](arg1);
+}
+
+export function GetAllCollectionTrees() {
+  return window['go']['main']['App']['GetAllCollectionTrees']();
+}
+
+export function GetAllCollections() {
+  return window['go']['main']['App']['GetAllCollections']();
 }
 
 export function GetAllConfigs() {
@@ -38,6 +74,14 @@ export function GetClusterHealthForAllConfigs() {
   return window['go']['main']['App']['GetClusterHealthForAllConfigs']();
 }
 
+export function GetCollectionByID(arg1) {
+  return window['go']['main']['App']['GetCollectionByID'](arg1);
+}
+
+export function GetCollectionTree(arg1) {
+  return window['go']['main']['App']['GetCollectionTree'](arg1);
+}
+
 export function GetConfigByID(arg1) {
   return window['go']['main']['App']['GetConfigByID'](arg1);
 }
@@ -46,12 +90,32 @@ export function GetDefaultConfig() {
   return window['go']['main']['App']['GetDefaultConfig']();
 }
 
+export function GetFolderByID(arg1) {
+  return window['go']['main']['App']['GetFolderByID'](arg1);
+}
+
+export function GetFoldersByCollectionID(arg1) {
+  return window['go']['main']['App']['GetFoldersByCollectionID'](arg1);
+}
+
 export function GetMonacoCacheInfo(arg1) {
   return window['go']['main']['App']['GetMonacoCacheInfo'](arg1);
 }
 
 export function GetMonacoCacheSize() {
   return window['go']['main']['App']['GetMonacoCacheSize']();
+}
+
+export function GetRestRequestByID(arg1) {
+  return window['go']['main']['App']['GetRestRequestByID'](arg1);
+}
+
+export function GetRestRequestsByCollectionID(arg1) {
+  return window['go']['main']['App']['GetRestRequestsByCollectionID'](arg1);
+}
+
+export function GetRestRequestsByFolderID(arg1) {
+  return window['go']['main']['App']['GetRestRequestsByFolderID'](arg1);
 }
 
 export function Greet(arg1) {
@@ -78,8 +142,20 @@ export function TestDefaultConnection() {
   return window['go']['main']['App']['TestDefaultConnection']();
 }
 
+export function UpdateCollection(arg1, arg2) {
+  return window['go']['main']['App']['UpdateCollection'](arg1, arg2);
+}
+
 export function UpdateConfig(arg1, arg2) {
   return window['go']['main']['App']['UpdateConfig'](arg1, arg2);
+}
+
+export function UpdateFolder(arg1, arg2) {
+  return window['go']['main']['App']['UpdateFolder'](arg1, arg2);
+}
+
+export function UpdateRestRequest(arg1, arg2) {
+  return window['go']['main']['App']['UpdateRestRequest'](arg1, arg2);
 }
 
 export function WriteMonacoCache(arg1, arg2) {

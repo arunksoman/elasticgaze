@@ -79,6 +79,70 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class Collection {
+	    id: number;
+	    name: string;
+	    description?: string;
+	    created_at: string;
+	    updated_at: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Collection(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.description = source["description"];
+	        this.created_at = source["created_at"];
+	        this.updated_at = source["updated_at"];
+	    }
+	}
+	export class CollectionTreeNode {
+	    id: number;
+	    name: string;
+	    type: string;
+	    method?: string;
+	    url?: string;
+	    body?: string;
+	    description?: string;
+	    children?: CollectionTreeNode[];
+	
+	    static createFrom(source: any = {}) {
+	        return new CollectionTreeNode(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.type = source["type"];
+	        this.method = source["method"];
+	        this.url = source["url"];
+	        this.body = source["body"];
+	        this.description = source["description"];
+	        this.children = this.convertValues(source["children"], CollectionTreeNode);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class Config {
 	    id: number;
 	    connection_name: string;
@@ -113,6 +177,20 @@ export namespace models {
 	        this.updated_at = source["updated_at"];
 	    }
 	}
+	export class CreateCollectionRequest {
+	    name: string;
+	    description?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new CreateCollectionRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.description = source["description"];
+	    }
+	}
 	export class CreateConfigRequest {
 	    connection_name: string;
 	    env_indicator_color: string;
@@ -139,6 +217,46 @@ export namespace models {
 	        this.username = source["username"];
 	        this.password = source["password"];
 	        this.set_as_default = source["set_as_default"];
+	    }
+	}
+	export class CreateFolderRequest {
+	    name: string;
+	    parent_folder_id?: number;
+	    collection_id: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new CreateFolderRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.parent_folder_id = source["parent_folder_id"];
+	        this.collection_id = source["collection_id"];
+	    }
+	}
+	export class CreateRequestRequest {
+	    name: string;
+	    method: string;
+	    url: string;
+	    body?: string;
+	    description?: string;
+	    folder_id?: number;
+	    collection_id: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new CreateRequestRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.method = source["method"];
+	        this.url = source["url"];
+	        this.body = source["body"];
+	        this.description = source["description"];
+	        this.folder_id = source["folder_id"];
+	        this.collection_id = source["collection_id"];
 	    }
 	}
 	export class ElasticsearchRestRequest {
@@ -175,6 +293,28 @@ export namespace models {
 	        this.response = source["response"];
 	        this.error_details = source["error_details"];
 	        this.error_code = source["error_code"];
+	    }
+	}
+	export class Folder {
+	    id: number;
+	    name: string;
+	    parent_folder_id?: number;
+	    collection_id: number;
+	    created_at: string;
+	    updated_at: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Folder(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.parent_folder_id = source["parent_folder_id"];
+	        this.collection_id = source["collection_id"];
+	        this.created_at = source["created_at"];
+	        this.updated_at = source["updated_at"];
 	    }
 	}
 	export class IndexMetrics {
@@ -265,6 +405,36 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class Request {
+	    id: number;
+	    name: string;
+	    method: string;
+	    url: string;
+	    body?: string;
+	    description?: string;
+	    folder_id?: number;
+	    collection_id: number;
+	    created_at: string;
+	    updated_at: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Request(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.method = source["method"];
+	        this.url = source["url"];
+	        this.body = source["body"];
+	        this.description = source["description"];
+	        this.folder_id = source["folder_id"];
+	        this.collection_id = source["collection_id"];
+	        this.created_at = source["created_at"];
+	        this.updated_at = source["updated_at"];
+	    }
+	}
 	
 	export class TestConnectionRequest {
 	    host: string;
@@ -312,6 +482,20 @@ export namespace models {
 	        this.error_code = source["error_code"];
 	    }
 	}
+	export class UpdateCollectionRequest {
+	    name?: string;
+	    description?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateCollectionRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.description = source["description"];
+	    }
+	}
 	export class UpdateConfigRequest {
 	    connection_name?: string;
 	    env_indicator_color?: string;
@@ -338,6 +522,44 @@ export namespace models {
 	        this.username = source["username"];
 	        this.password = source["password"];
 	        this.set_as_default = source["set_as_default"];
+	    }
+	}
+	export class UpdateFolderRequest {
+	    name?: string;
+	    parent_folder_id?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateFolderRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.parent_folder_id = source["parent_folder_id"];
+	    }
+	}
+	export class UpdateRequestRequest {
+	    name?: string;
+	    method?: string;
+	    url?: string;
+	    body?: string;
+	    description?: string;
+	    folder_id?: number;
+	    collection_id?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateRequestRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.method = source["method"];
+	        this.url = source["url"];
+	        this.body = source["body"];
+	        this.description = source["description"];
+	        this.folder_id = source["folder_id"];
+	        this.collection_id = source["collection_id"];
 	    }
 	}
 

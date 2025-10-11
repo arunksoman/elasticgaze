@@ -13,6 +13,7 @@
 		triggerConnectionCheck 
 	} from '$lib/stores/connectionWarningStore.js';
 	import { connectionUpdateTrigger } from '$lib/stores/connectionUpdateStore.js';
+	import { collectionsOpen } from '$lib/stores/collectionsStore.js';
 	import { warmMonacoEditor } from '$lib/services/monacoPreloader.js';
 	// Wails runtime controls
 	import {

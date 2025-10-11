@@ -2,7 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { theme } from '$lib/theme.js';
-	import { onDestroy } from 'svelte';
+	import { collectionsOpen } from '$lib/stores/collectionsStore.js';
+	import { sidebarExpanded } from '$lib/stores/sidebarStore.js';
+	import { onDestroy, onMount } from 'svelte';
 	import { warmMonacoEditor } from '$lib/services/monacoPreloader.js';
 
 	let { currentTheme = $bindable('light') } = $props();
@@ -53,6 +55,11 @@
 	function toggleSidebar() {
 		permanentlyExpanded = !permanentlyExpanded;
 		expanded = permanentlyExpanded;
+		sidebarExpanded.set(expanded);
+	}
+
+	function toggleCollections() {
+		collectionsOpen.update(value => !value);
 	}
 
 	function handleHover(idx) {
@@ -64,6 +71,7 @@
 		}
 		hoverIndex = idx;
 		expanded = true;
+		sidebarExpanded.set(expanded);
 		
 		// Trigger menu-specific hover actions
 		handleMenuHover(idx);
@@ -80,6 +88,7 @@
 		hoverTimeout = setTimeout(() => {
 			hoverIndex = null;
 			expanded = false;
+			sidebarExpanded.set(expanded);
 			hoverTimeout = null;
 		}, 300); // 300ms delay before collapsing
 	}
@@ -105,6 +114,7 @@
 		hoverTimeout = setTimeout(() => {
 			hoverIndex = null;
 			expanded = false;
+			sidebarExpanded.set(expanded);
 			hoverTimeout = null;
 		}, 200); // Shorter delay when leaving entire sidebar
 	}
@@ -144,6 +154,11 @@
 			clearTimeout(hoverTimeout);
 		}
 	});
+
+	// Initialize sidebar expanded state
+	onMount(() => {
+		sidebarExpanded.set(expanded);
+	});
 </script>
 
 <!-- Sidebar -->
@@ -154,16 +169,25 @@
 >
 	<div class="flex-1">
 		<!-- App Icon -->
-		<button
-			class="flex items-center w-full h-12 mb-2 rounded-lg transition theme-text-primary theme-hover"
+		<div
+			class="flex items-center w-full h-12 mb-2 rounded-lg transition theme-text-primary theme-hover relative cursor-pointer"
 			onclick={toggleSidebar}
+			onkeydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					toggleSidebar();
+				}
+			}}
+			role="button"
+			tabindex="0"
 			aria-label="Toggle menu"
 		>
 			<img src={AppIcon} alt="ElasticGaze" class="w-6 h-6 mx-4 transition-all duration-300" />
 			{#if expanded}
 				<span class="ml-1 text-lg font-semibold whitespace-nowrap theme-text-primary">ElasticGaze</span>
 			{/if}
-		</button>
+		</div>
+		
 		<!-- Menu Items -->
 		<ul class="mt-2">
 			{#each menu as item, idx}
@@ -272,3 +296,19 @@
 		</div>
 	{/if}
 </nav>
+
+<!-- Floating Collections Chevron - only show on REST page when collections is closed -->
+{#if page.url.pathname === '/rest' && !$collectionsOpen}
+	<button
+		class="fixed top-24 z-20 p-2 rounded-r-lg theme-bg-secondary theme-hover shadow-lg transition-all duration-300 theme-text-secondary hover:theme-text-primary"
+		style="left: {expanded ? '224px' : '64px'};"
+		onclick={toggleCollections}
+		title="Open Collections"
+	>
+		<img 
+			src="/icons/chevrons-right.svg"
+			alt="Open Collections" 
+			class="w-4 h-4 theme-icon" 
+		/>
+	</button>
+{/if}

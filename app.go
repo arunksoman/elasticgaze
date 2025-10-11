@@ -21,6 +21,7 @@ type App struct {
 	configService      *service.ConfigService
 	esService          *service.ElasticsearchService
 	monacoCacheService *service.MonacoCacheService
+	collectionsService *service.CollectionsService
 }
 
 // NewApp creates a new App application struct
@@ -74,6 +75,10 @@ func (a *App) initDatabase() error {
 	configRepo := repository.NewConfigRepository(db.GetConnection())
 	a.configService = service.NewConfigService(configRepo)
 	a.esService = service.NewElasticsearchService()
+
+	// Initialize collections repository and service
+	collectionsRepo := repository.NewCollectionsRepository(db.GetConnection())
+	a.collectionsService = service.NewCollectionsService(collectionsRepo)
 
 	// Initialize Monaco cache service
 	a.monacoCacheService = service.NewMonacoCacheService(elasticGazeDir)
@@ -306,4 +311,171 @@ func (a *App) ClearAllMonacoCache() error {
 // GetMonacoCacheSize returns the total size of Monaco Editor cache
 func (a *App) GetMonacoCacheSize() (int64, error) {
 	return a.monacoCacheService.GetCacheSize()
+}
+
+// Collections API Methods
+
+// CreateCollection creates a new REST request collection
+func (a *App) CreateCollection(req *models.CreateCollectionRequest) (*models.Collection, error) {
+	runtime.LogInfof(a.ctx, "Creating new collection: %s", req.Name)
+	collection, err := a.collectionsService.CreateCollection(req)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to create collection: %v", err)
+		return nil, err
+	}
+	runtime.LogInfof(a.ctx, "Successfully created collection with ID: %d", collection.ID)
+	return collection, nil
+}
+
+// GetCollectionByID retrieves a collection by ID
+func (a *App) GetCollectionByID(id int) (*models.Collection, error) {
+	return a.collectionsService.GetCollectionByID(id)
+}
+
+// GetAllCollections retrieves all collections
+func (a *App) GetAllCollections() ([]*models.Collection, error) {
+	return a.collectionsService.GetAllCollections()
+}
+
+// UpdateCollection updates an existing collection
+func (a *App) UpdateCollection(id int, req *models.UpdateCollectionRequest) (*models.Collection, error) {
+	runtime.LogInfof(a.ctx, "Updating collection ID: %d", id)
+	collection, err := a.collectionsService.UpdateCollection(id, req)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to update collection: %v", err)
+		return nil, err
+	}
+	runtime.LogInfof(a.ctx, "Successfully updated collection ID: %d", id)
+	return collection, nil
+}
+
+// DeleteCollection deletes a collection by ID
+func (a *App) DeleteCollection(id int) error {
+	runtime.LogInfof(a.ctx, "Deleting collection ID: %d", id)
+	err := a.collectionsService.DeleteCollection(id)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to delete collection: %v", err)
+		return err
+	}
+	runtime.LogInfof(a.ctx, "Successfully deleted collection ID: %d", id)
+	return nil
+}
+
+// CreateFolder creates a new folder within a collection
+func (a *App) CreateFolder(req *models.CreateFolderRequest) (*models.Folder, error) {
+	runtime.LogInfof(a.ctx, "Creating new folder: %s in collection ID: %d", req.Name, req.CollectionID)
+	folder, err := a.collectionsService.CreateFolder(req)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to create folder: %v", err)
+		return nil, err
+	}
+	runtime.LogInfof(a.ctx, "Successfully created folder with ID: %d", folder.ID)
+	return folder, nil
+}
+
+// GetFolderByID retrieves a folder by ID
+func (a *App) GetFolderByID(id int) (*models.Folder, error) {
+	return a.collectionsService.GetFolderByID(id)
+}
+
+// GetFoldersByCollectionID retrieves all folders for a collection
+func (a *App) GetFoldersByCollectionID(collectionID int) ([]*models.Folder, error) {
+	return a.collectionsService.GetFoldersByCollectionID(collectionID)
+}
+
+// UpdateFolder updates an existing folder
+func (a *App) UpdateFolder(id int, req *models.UpdateFolderRequest) (*models.Folder, error) {
+	runtime.LogInfof(a.ctx, "Updating folder ID: %d", id)
+	folder, err := a.collectionsService.UpdateFolder(id, req)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to update folder: %v", err)
+		return nil, err
+	}
+	runtime.LogInfof(a.ctx, "Successfully updated folder ID: %d", id)
+	return folder, nil
+}
+
+// DeleteFolder deletes a folder by ID
+func (a *App) DeleteFolder(id int) error {
+	runtime.LogInfof(a.ctx, "Deleting folder ID: %d", id)
+	err := a.collectionsService.DeleteFolder(id)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to delete folder: %v", err)
+		return err
+	}
+	runtime.LogInfof(a.ctx, "Successfully deleted folder ID: %d", id)
+	return nil
+}
+
+// CreateRestRequest creates a new REST request within a collection
+func (a *App) CreateRestRequest(req *models.CreateRequestRequest) (*models.Request, error) {
+	runtime.LogInfof(a.ctx, "Creating new request: %s %s in collection ID: %d", req.Method, req.Name, req.CollectionID)
+	request, err := a.collectionsService.CreateRequest(req)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to create request: %v", err)
+		return nil, err
+	}
+	runtime.LogInfof(a.ctx, "Successfully created request with ID: %d", request.ID)
+	return request, nil
+}
+
+// GetRestRequestByID retrieves a REST request by ID
+func (a *App) GetRestRequestByID(id int) (*models.Request, error) {
+	return a.collectionsService.GetRequestByID(id)
+}
+
+// GetRestRequestsByCollectionID retrieves all requests for a collection
+func (a *App) GetRestRequestsByCollectionID(collectionID int) ([]*models.Request, error) {
+	return a.collectionsService.GetRequestsByCollectionID(collectionID)
+}
+
+// GetRestRequestsByFolderID retrieves all requests for a folder
+func (a *App) GetRestRequestsByFolderID(folderID int) ([]*models.Request, error) {
+	return a.collectionsService.GetRequestsByFolderID(folderID)
+}
+
+// UpdateRestRequest updates an existing REST request
+func (a *App) UpdateRestRequest(id int, req *models.UpdateRequestRequest) (*models.Request, error) {
+	runtime.LogInfof(a.ctx, "Updating request ID: %d", id)
+	request, err := a.collectionsService.UpdateRequest(id, req)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to update request: %v", err)
+		return nil, err
+	}
+	runtime.LogInfof(a.ctx, "Successfully updated request ID: %d", id)
+	return request, nil
+}
+
+// DeleteRestRequest deletes a REST request by ID
+func (a *App) DeleteRestRequest(id int) error {
+	runtime.LogInfof(a.ctx, "Deleting request ID: %d", id)
+	err := a.collectionsService.DeleteRequest(id)
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to delete request: %v", err)
+		return err
+	}
+	runtime.LogInfof(a.ctx, "Successfully deleted request ID: %d", id)
+	return nil
+}
+
+// GetCollectionTree retrieves the tree structure for a specific collection
+func (a *App) GetCollectionTree(collectionID int) (*models.CollectionTreeNode, error) {
+	return a.collectionsService.GetCollectionTree(collectionID)
+}
+
+// GetAllCollectionTrees retrieves the tree structure for all collections
+func (a *App) GetAllCollectionTrees() ([]*models.CollectionTreeNode, error) {
+	return a.collectionsService.GetAllCollectionTrees()
+}
+
+// EnsureDefaultCollection ensures a default collection exists and returns it
+func (a *App) EnsureDefaultCollection() (*models.Collection, error) {
+	runtime.LogInfo(a.ctx, "Ensuring default collection exists")
+	collection, err := a.collectionsService.EnsureDefaultCollection()
+	if err != nil {
+		runtime.LogErrorf(a.ctx, "Failed to ensure default collection: %v", err)
+		return nil, err
+	}
+	runtime.LogInfof(a.ctx, "Default collection ensured with ID: %d", collection.ID)
+	return collection, nil
 }

@@ -4,8 +4,10 @@
 	import RequestTabs from './RequestTabs.svelte';
 	import ResponseViewer from './ResponseViewer.svelte';
 	import ResizableSplitter from './ResizableSplitter.svelte';
+	import CollectionsSidebar from './CollectionsSidebar.svelte';
 	import { ExecuteElasticsearchRequest } from '$lib/wailsjs/go/main/App.js';
 	import { tabStore } from '$lib/stores/tabStore.js';
+	import { collectionsOpen } from '$lib/stores/collectionsStore.js';
 	
 	// Subscribe to tab store
 	let tabState = $state({});
@@ -171,6 +173,28 @@
 			window.dispatchEvent(new Event('resize'));
 		}, 50);
 	}
+
+	// Collections sidebar handlers
+	function handleRequestSelect(request) {
+		console.log('Request selected:', request);
+	}
+
+	function handleRequestLoad(requestData) {
+		// Load request data into a new tab
+		const newTabData = {
+			method: requestData.method || 'GET',
+			endpoint: requestData.url || '',
+			baseEndpoint: requestData.url || '',
+			params: [],
+			requestBody: requestData.body || '',
+			description: requestData.description || '',
+			responseData: null,
+			isLoading: false
+		};
+		
+		// Add a new tab with the loaded request data
+		tabStore.addTab(requestData.name || 'Loaded Request', newTabData);
+	}
 </script>
 
 <div class="h-screen flex flex-col">
@@ -236,4 +260,9 @@
 			<p>No active tab</p>
 		</div>
 	{/if}
+
+	<!-- Collections Sidebar - Only on REST page -->
+	<CollectionsSidebar 
+		bind:isOpen={$collectionsOpen}
+	/>
 </div>

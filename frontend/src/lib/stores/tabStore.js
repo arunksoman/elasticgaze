@@ -33,8 +33,13 @@ const createTabStore = () => {
 		subscribe,
 		
 		// Add a new tab
-		addTab: () => update(store => {
+		addTab: (title = null, data = null) => update(store => {
 			const newTab = createTab(store.nextId);
+			if (title) newTab.title = title;
+			if (data) {
+				newTab.data = Object.assign({}, newTab.data, data);
+			}
+			
 			return {
 				...store,
 				tabs: [...store.tabs, newTab],
