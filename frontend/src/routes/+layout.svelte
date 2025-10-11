@@ -13,7 +13,7 @@
 		triggerConnectionCheck 
 	} from '$lib/stores/connectionWarningStore.js';
 	import { connectionUpdateTrigger } from '$lib/stores/connectionUpdateStore.js';
-	import { preloadMonacoEditor } from '$lib/services/monacoPreloader.js';
+	import { warmMonacoEditor } from '$lib/services/monacoPreloader.js';
 	// Wails runtime controls
 	import {
 		WindowIsMaximised,
@@ -188,10 +188,8 @@
 	}
 	
 	onMount(() => {
-		// Start preloading Monaco Editor in the background for better performance
-		preloadMonacoEditor().catch(error => {
-			console.warn('Monaco Editor preload failed, but this is not critical:', error);
-		});
+		// Start warming Monaco Editor in the background for better performance
+		warmMonacoEditor();
 		
 		// Window initialization for Wails
 		if (hasWails()) {

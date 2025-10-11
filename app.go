@@ -16,10 +16,11 @@ import (
 
 // App struct
 type App struct {
-	ctx           context.Context
-	db            *database.DB
-	configService *service.ConfigService
-	esService     *service.ElasticsearchService
+	ctx                context.Context
+	db                 *database.DB
+	configService      *service.ConfigService
+	esService          *service.ElasticsearchService
+	monacoCacheService *service.MonacoCacheService
 }
 
 // NewApp creates a new App application struct
@@ -73,6 +74,9 @@ func (a *App) initDatabase() error {
 	configRepo := repository.NewConfigRepository(db.GetConnection())
 	a.configService = service.NewConfigService(configRepo)
 	a.esService = service.NewElasticsearchService()
+
+	// Initialize Monaco cache service
+	a.monacoCacheService = service.NewMonacoCacheService(elasticGazeDir)
 
 	return nil
 }
@@ -261,4 +265,45 @@ func (a *App) ExecuteElasticsearchRequest(req *models.ElasticsearchRestRequest) 
 
 	// Execute the request
 	return a.esService.ExecuteRestRequest(defaultConfig, req)
+}
+
+// Monaco Cache API Methods
+
+// GetMonacoCacheInfo retrieves cache information for a specific Monaco Editor version
+func (a *App) GetMonacoCacheInfo(version string) (*service.CacheInfo, error) {
+	runtime.LogInfof(a.ctx, "Getting Monaco cache info for version: %s", version)
+	return a.monacoCacheService.GetCacheInfo(version)
+}
+
+// WriteMonacoCache stores Monaco Editor data in cache
+func (a *App) WriteMonacoCache(version string, data string) error {
+	runtime.LogInfof(a.ctx, "Writing Monaco cache for version: %s", version)
+	return a.monacoCacheService.WriteCache(version, []byte(data))
+}
+
+// ReadMonacoCache retrieves Monaco Editor data from cache
+func (a *App) ReadMonacoCache(version string) (string, error) {
+	runtime.LogInfof(a.ctx, "Reading Monaco cache for version: %s", version)
+	data, err := a.monacoCacheService.ReadCache(version)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// InvalidateMonacoCache removes cache for a specific version
+func (a *App) InvalidateMonacoCache(version string) error {
+	runtime.LogInfof(a.ctx, "Invalidating Monaco cache for version: %s", version)
+	return a.monacoCacheService.InvalidateCache(version)
+}
+
+// ClearAllMonacoCache removes all Monaco Editor cache
+func (a *App) ClearAllMonacoCache() error {
+	runtime.LogInfo(a.ctx, "Clearing all Monaco cache")
+	return a.monacoCacheService.ClearAllCache()
+}
+
+// GetMonacoCacheSize returns the total size of Monaco Editor cache
+func (a *App) GetMonacoCacheSize() (int64, error) {
+	return a.monacoCacheService.GetCacheSize()
 }

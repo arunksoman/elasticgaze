@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { theme } from '$lib/theme.js';
 	import { onDestroy } from 'svelte';
+	import { warmMonacoEditor } from '$lib/services/monacoPreloader.js';
 
 	let { currentTheme = $bindable('light') } = $props();
 
@@ -41,6 +42,13 @@
 	function handleMenuClick(idx) {
 		goto(menu[idx].route);
 	}
+	
+	function handleMenuHover(idx) {
+		// Preload Monaco Editor when hovering over REST menu item
+		if (menu[idx].route === '/rest') {
+			warmMonacoEditor();
+		}
+	}
 
 	function toggleSidebar() {
 		permanentlyExpanded = !permanentlyExpanded;
@@ -56,6 +64,9 @@
 		}
 		hoverIndex = idx;
 		expanded = true;
+		
+		// Trigger menu-specific hover actions
+		handleMenuHover(idx);
 	}
 
 	function handleMouseLeave() {

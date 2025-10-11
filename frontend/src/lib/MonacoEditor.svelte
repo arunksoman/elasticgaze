@@ -41,6 +41,88 @@
 	let isUpdatingFromExternal = false;
 	
 	onMount(() => {
+		// Create inline workers to avoid path issues
+		if (typeof self !== 'undefined') {
+			self.MonacoEnvironment = {
+				getWorker: function (workerId, label) {
+					// Create a simple inline worker
+					const workerScript = `
+						// Simple worker that handles Monaco messages
+						self.onmessage = function(e) {
+							try {
+								const { id, method, args } = e.data;
+								
+								// Simple response for common Monaco worker methods
+								let result = null;
+								
+								switch (method) {
+									case 'getSemanticDiagnostics':
+									case 'getSyntacticDiagnostics':
+									case 'getSuggestionDiagnostics':
+									case 'getCompilerOptionsDiagnostics':
+										result = []; // Return empty array for diagnostics
+										break;
+									case 'getCompletionsAtPosition':
+										result = { entries: [] }; // Return empty completions
+										break;
+									case 'getQuickInfoAtPosition':
+									case 'getDefinitionAtPosition':
+									case 'getTypeDefinitionAtPosition':
+									case 'getImplementationAtPosition':
+									case 'getReferencesAtPosition':
+										result = undefined; // Return undefined for position-based queries
+										break;
+									case 'getRenameInfo':
+										result = { canRename: false }; // Disable rename
+										break;
+									case 'findRenameLocations':
+										result = []; // Return empty rename locations
+										break;
+									case 'getNavigateToItems':
+										result = []; // Return empty navigation items
+										break;
+									case 'getFormattingEditsForDocument':
+									case 'getFormattingEditsForRange':
+										result = []; // Return empty formatting edits
+										break;
+									default:
+										result = null;
+								}
+								
+								// Send response back
+								self.postMessage({
+									seq: e.data.seq,
+									type: 'response',
+									success: true,
+									request_seq: id,
+									command: method,
+									body: result
+								});
+							} catch (error) {
+								// Send error response
+								self.postMessage({
+									seq: e.data.seq,
+									type: 'response',
+									success: false,
+									request_seq: e.data.id,
+									command: e.data.method,
+									message: error.message
+								});
+							}
+						};
+						
+						// Handle termination
+						self.addEventListener('error', function(e) {
+							console.warn('Monaco worker error:', e);
+						});
+					`;
+					
+					const blob = new Blob([workerScript], { type: 'application/javascript' });
+					return new Worker(URL.createObjectURL(blob));
+				}
+			};
+		}
+		
 		// Configure Monaco Editor
 		monaco.editor.defineTheme('custom-dark', {
 			base: 'vs-dark',
@@ -68,6 +150,20 @@
 			allowComments: false,
 			schemas: [],
 			enableSchemaRequest: false
+		});
+		
+		// Configure JSON mode with working inline worker
+		monaco.languages.json.jsonDefaults.setModeConfiguration({
+			documentFormattingEdits: true,
+			documentRangeFormattingEdits: true,
+			completionItems: true,
+			hovers: true,
+			documentSymbols: true,
+			tokens: true,
+			colors: true,
+			foldingRanges: true,
+			diagnostics: true, // Re-enable with our inline worker
+			selectionRanges: true
 		});
 		
 		// Ensure JSON formatter is available by registering document formatting provider

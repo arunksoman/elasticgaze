@@ -12,20 +12,35 @@
 	let isLoaded = $state(isMonacoEditorLoaded());
 	let MonacoEditor = $state(null);
 	let loadError = $state(null);
+	let isLoading = $state(false);
 	
 	onMount(async () => {
-		if (isLoaded && MonacoEditor) {
-			return; // Already loaded
+		// Early check if editor is already cached/loaded
+		if (isMonacoEditorLoaded()) {
+			try {
+				const module = await getMonacoEditor();
+				MonacoEditor = module.default;
+				isLoaded = true;
+				return;
+			} catch (error) {
+				console.error('Failed to load cached Monaco Editor:', error);
+			}
 		}
 		
-		try {
-			// Use the preloader service to get Monaco Editor
-			const module = await getMonacoEditor();
-			MonacoEditor = module.default;
-			isLoaded = true;
-		} catch (error) {
-			console.error('Failed to load Monaco Editor:', error);
-			loadError = error;
+		// Start loading if not cached
+		if (!isLoaded && !MonacoEditor && !isLoading) {
+			isLoading = true;
+			try {
+				// Use the preloader service to get Monaco Editor
+				const module = await getMonacoEditor();
+				MonacoEditor = module.default;
+				isLoaded = true;
+			} catch (error) {
+				console.error('Failed to load Monaco Editor:', error);
+				loadError = error;
+			} finally {
+				isLoading = false;
+			}
 		}
 	});
 </script>
@@ -37,7 +52,7 @@
 			<p class="text-sm mt-1">{loadError.message}</p>
 		</div>
 	</div>
-{:else if !isLoaded || !MonacoEditor}
+{:else if (!isLoaded || !MonacoEditor || isLoading)}
 	<!-- Loading skeleton -->
 	<div class="flex items-center justify-center theme-bg-secondary border border-gray-300 dark:border-gray-600 rounded-lg animate-pulse" style="height: {loadingHeight}">
 		<div class="text-center">
@@ -47,5 +62,5 @@
 	</div>
 {:else}
 	<!-- Loaded Monaco Editor -->
-	<svelte:component this={MonacoEditor} {...editorProps} />
+	<MonacoEditor {...editorProps} />
 {/if}

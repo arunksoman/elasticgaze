@@ -343,3 +343,30 @@ export namespace models {
 
 }
 
+export namespace service {
+	
+	export class CacheInfo {
+	    exists: boolean;
+	    size: number;
+	    modTime: string;
+	    cacheKey: string;
+	    cachePath: string;
+	    isExpired: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new CacheInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.exists = source["exists"];
+	        this.size = source["size"];
+	        this.modTime = source["modTime"];
+	        this.cacheKey = source["cacheKey"];
+	        this.cachePath = source["cachePath"];
+	        this.isExpired = source["isExpired"];
+	    }
+	}
+
+}
+
