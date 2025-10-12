@@ -126,6 +126,12 @@
 	function closeSettings() {
 		showSettings = false;
 	}
+	
+	function handleDocumentClick(event) {
+		if (showSettings && !event.target.closest('.settings-popup') && !event.target.closest('[data-settings-button]')) {
+			closeSettings();
+		}
+	}
 
 	function setTheme(t) {
 		console.log('setTheme called with:', t);
@@ -148,16 +154,18 @@
 		// Don't close settings popup to allow multiple theme switches
 	}
 
+	// Initialize sidebar expanded state
+	onMount(() => {
+		sidebarExpanded.set(expanded);
+		document.addEventListener('click', handleDocumentClick);
+	});
+	
 	// Cleanup timeout on component destroy
 	onDestroy(() => {
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
 		}
-	});
-
-	// Initialize sidebar expanded state
-	onMount(() => {
-		sidebarExpanded.set(expanded);
+		document.removeEventListener('click', handleDocumentClick);
 	});
 </script>
 
@@ -222,6 +230,7 @@
 				class="flex items-center w-full h-12 rounded-lg transition group theme-text-primary theme-hover"
 				onclick={openSettings}
 				aria-label="Settings"
+				data-settings-button
 			>
 				<img src={SettingsIcon} alt="Settings" class="w-6 h-6 mx-4 transition-all duration-300 theme-icon" />
 				{#if expanded}
@@ -234,68 +243,69 @@
 			<span class="text-xs theme-text-secondary opacity-70">V0.0.1</span>
 		</div>
 	</div>
-	<!-- Settings Popup -->
-	{#if showSettings}
-		<div class="absolute left-0 bottom-16 w-48 shadow-xl rounded-lg p-4 z-20 theme-bg-secondary">
-			<div class="flex flex-col gap-4">
-				<span class="font-semibold mb-2 theme-text-primary">Choose Theme</span>
-				
-				<!-- Theme Toggle Switch -->
-				<div class="flex items-center justify-center">
-					<button
-						class="relative inline-flex items-center w-16 h-6 bg-gray-300 dark:bg-gray-600 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-						onclick={() => setTheme(currentTheme === 'light' ? 'dark' : 'light')}
-						aria-label="Toggle theme"
-					>
-						<!-- Toggle slider -->
-						<div 
-							class={`absolute w-6 h-6 bg-white rounded-full shadow-lg transform transition-transform duration-300 flex items-center justify-center ${
-								currentTheme === 'dark' ? 'translate-x-8' : 'translate-x-0'
-							}`}
-						>
-							<!-- Icon inside the toggle -->
-							<img 
-								src={currentTheme === 'light' ? '/icons/bright.svg' : '/icons/dark.svg'} 
-								alt={currentTheme === 'light' ? 'Light mode' : 'Dark mode'}
-								class="w-4 h-4"
-								style={currentTheme === 'light' 
-									? 'filter: brightness(0) saturate(100%) invert(69%) sepia(100%) saturate(1769%) hue-rotate(16deg) brightness(108%) contrast(98%);' 
-									: 'filter: brightness(0) saturate(100%) invert(20%) sepia(10%) saturate(500%) hue-rotate(200deg) brightness(95%) contrast(90%);'}
-							/>
-						</div>
-						
-						<!-- Background icons -->
-						<div class="flex items-center justify-between w-full px-1.5">
-							<img 
-								src="/icons/bright.svg" 
-								alt="Light mode"
-								class={`w-3 h-3 transition-opacity duration-300 ${
-									currentTheme === 'light' ? 'opacity-0' : 'opacity-60'
-								}`}
-								style="filter: brightness(0) saturate(100%) invert(100%);"
-							/>
-							<img 
-								src="/icons/dark.svg" 
-								alt="Dark mode"
-								class={`w-3 h-3 transition-opacity duration-300 ${
-									currentTheme === 'dark' ? 'opacity-0' : 'opacity-60'
-								}`}
-								style="filter: brightness(0) saturate(100%) invert(100%);"
-							/>
-						</div>
-					</button>
-				</div>
-				
-				<button 
-					class="mt-2 text-xs transition theme-text-muted hover:theme-text-secondary"
-					onclick={closeSettings}
+</nav>
+
+<!-- Settings Popup - moved outside nav for proper z-index -->
+{#if showSettings}
+	<div class="fixed bottom-16 w-48 shadow-xl rounded-lg p-4 theme-bg-secondary border theme-border settings-popup" style="left: {expanded ? '16px' : '16px'}; z-index: 9999;">
+		<div class="flex flex-col gap-4">
+			<span class="font-semibold mb-2 theme-text-primary">Choose Theme</span>
+			
+			<!-- Theme Toggle Switch -->
+			<div class="flex items-center justify-center">
+				<button
+					class="relative inline-flex items-center w-16 h-6 bg-gray-300 dark:bg-gray-600 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+					onclick={() => setTheme(currentTheme === 'light' ? 'dark' : 'light')}
+					aria-label="Toggle theme"
 				>
-					Close
+					<!-- Toggle slider -->
+					<div 
+						class={`absolute w-6 h-6 bg-white rounded-full shadow-lg transform transition-transform duration-300 flex items-center justify-center ${
+							currentTheme === 'dark' ? 'translate-x-8' : 'translate-x-0'
+						}`}
+					>
+						<!-- Icon inside the toggle -->
+						<img 
+							src={currentTheme === 'light' ? '/icons/bright.svg' : '/icons/dark.svg'} 
+							alt={currentTheme === 'light' ? 'Light mode' : 'Dark mode'}
+							class="w-4 h-4"
+							style={currentTheme === 'light' 
+								? 'filter: brightness(0) saturate(100%) invert(69%) sepia(100%) saturate(1769%) hue-rotate(16deg) brightness(108%) contrast(98%);' 
+								: 'filter: brightness(0) saturate(100%) invert(20%) sepia(10%) saturate(500%) hue-rotate(200deg) brightness(95%) contrast(90%);'}
+						/>
+					</div>
+					
+					<!-- Background icons -->
+					<div class="flex items-center justify-between w-full px-1.5">
+						<img 
+							src="/icons/bright.svg" 
+							alt="Light mode"
+							class={`w-3 h-3 transition-opacity duration-300 ${
+								currentTheme === 'light' ? 'opacity-0' : 'opacity-60'
+							}`}
+							style="filter: brightness(0) saturate(100%) invert(100%);"
+						/>
+						<img 
+							src="/icons/dark.svg" 
+							alt="Dark mode"
+							class={`w-3 h-3 transition-opacity duration-300 ${
+								currentTheme === 'dark' ? 'opacity-0' : 'opacity-60'
+							}`}
+							style="filter: brightness(0) saturate(100%) invert(100%);"
+						/>
+					</div>
 				</button>
 			</div>
+			
+			<button 
+				class="mt-2 text-xs transition theme-text-muted hover:theme-text-secondary"
+				onclick={closeSettings}
+			>
+				Close
+			</button>
 		</div>
-	{/if}
-</nav>
+	</div>
+{/if}
 
 <!-- Floating Collections Chevron - only show on REST page when collections is closed -->
 {#if page.url.pathname === '/rest' && !$collectionsOpen}

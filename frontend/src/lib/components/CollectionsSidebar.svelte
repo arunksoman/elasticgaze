@@ -673,7 +673,8 @@
 					<input
 						type="text"
 						bind:value={editingName}
-						class="w-full px-1 py-0 text-sm bg-transparent border-b theme-border theme-text-primary focus:outline-none focus:border-purple-500 focus-input"
+						class="text-sm bg-transparent border border-purple-500 theme-text-primary focus:outline-none focus:border-purple-600 rounded px-1 py-0.5 min-w-0"
+						style="width: {Math.max(60, editingName.length * 8 + 16)}px;"
 						onclick={(e) => e.stopPropagation()}
 						onkeydown={handleEditKeydown}
 						onblur={(e) => {
@@ -685,16 +686,18 @@
 						use:focus
 					/>
 				{:else}
-					<span 
-						class="text-sm theme-text-primary truncate block cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-1 py-0.5 rounded"
-						onclick={(e) => {
-							e.stopPropagation();
-							startEditing(node);
-						}}
-						title="Click to edit"
-					>
-						{node.name}
-					</span>
+					<div class="inline-block">
+						<span 
+							class="text-sm theme-text-primary cursor-pointer theme-hover px-1 py-0.5 rounded inline-block"
+							onclick={(e) => {
+								e.stopPropagation();
+								startEditing(node);
+							}}
+							title="Click to edit"
+						>
+							{node.name}
+						</span>
+					</div>
 				{/if}
 			</div>
 

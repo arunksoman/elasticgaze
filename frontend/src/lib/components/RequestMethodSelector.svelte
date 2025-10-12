@@ -8,18 +8,18 @@
 		method = 'GET'
 	} = $props();
 	
-	// Postman-style method colors
+	// Postman-style method colors - match CollectionsSidebar colors
 	function getMethodColor(methodName) {
 		const colors = {
-			'GET': 'text-green-500',
-			'POST': 'text-orange-500',
-			'PUT': 'text-blue-500',
-			'DELETE': 'text-red-500',
-			'PATCH': 'text-purple-500',
-			'HEAD': 'text-gray-500',
-			'OPTIONS': 'text-indigo-500'
+			'GET': 'text-blue-600 dark:text-blue-400',
+			'POST': 'text-green-600 dark:text-green-400',
+			'PUT': 'text-orange-600 dark:text-orange-400',
+			'DELETE': 'text-red-600 dark:text-red-400',
+			'PATCH': 'text-purple-600 dark:text-purple-400',
+			'HEAD': 'text-gray-600 dark:text-gray-400',
+			'OPTIONS': 'text-yellow-600 dark:text-yellow-400'
 		};
-		return colors[methodName] || 'text-gray-400';
+		return colors[methodName] || 'text-gray-600 dark:text-gray-400';
 	}
 	
 	function handleChange(event) {
@@ -33,11 +33,11 @@
 	onchange={handleChange}
 	class={`border theme-border p-2 theme-bg-tertiary rounded font-semibold ${getMethodColor(method)} min-w-[100px]`}
 >
-	<option value="GET" class="text-green-500 font-semibold">GET</option>
-	<option value="POST" class="text-orange-500 font-semibold">POST</option>
-	<option value="PUT" class="text-blue-500 font-semibold">PUT</option>
-	<option value="DELETE" class="text-red-500 font-semibold">DELETE</option>
-	<option value="PATCH" class="text-purple-500 font-semibold">PATCH</option>
-	<option value="HEAD" class="text-gray-500 font-semibold">HEAD</option>
-	<option value="OPTIONS" class="text-indigo-500 font-semibold">OPTIONS</option>
+	<option value="GET" class="text-blue-600 dark:text-blue-400 font-semibold">GET</option>
+	<option value="POST" class="text-green-600 dark:text-green-400 font-semibold">POST</option>
+	<option value="PUT" class="text-orange-600 dark:text-orange-400 font-semibold">PUT</option>
+	<option value="DELETE" class="text-red-600 dark:text-red-400 font-semibold">DELETE</option>
+	<option value="PATCH" class="text-purple-600 dark:text-purple-400 font-semibold">PATCH</option>
+	<option value="HEAD" class="text-gray-600 dark:text-gray-400 font-semibold">HEAD</option>
+	<option value="OPTIONS" class="text-yellow-600 dark:text-yellow-400 font-semibold">OPTIONS</option>
 </select>
