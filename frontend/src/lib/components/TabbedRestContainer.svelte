@@ -5,6 +5,7 @@
 	import ResponseViewer from './ResponseViewer.svelte';
 	import ResizableSplitter from './ResizableSplitter.svelte';
 	import CollectionsSidebar from './CollectionsSidebar.svelte';
+	import SaveRequestModal from './SaveRequestModal.svelte';
 	import Toast from '$lib/Toast.svelte';
 	import { ExecuteElasticsearchRequest, UpdateRestRequest } from '$lib/wailsjs/go/main/App.js';
 	import { tabStore } from '$lib/stores/tabStore.js';
@@ -14,6 +15,10 @@
 	// Subscribe to tab store
 	let tabState = $state({});
 	let activeTab = $state(null);
+	
+	// Save modal state
+	let saveModalOpen = $state(false);
+	let saveModalRequestData = $state({});
 	
 	// Toast state
 	let toastShow = $state(false);
@@ -86,6 +91,17 @@
 		tabStore.addTab();
 	}
 	
+	function handleTabSave(event) {
+		// Find the tab and trigger save
+		const tabId = event.detail;
+		const tab = tabState.tabs.find(t => t.id === tabId);
+		if (tab && !tab.data.requestId) {
+			// Set as active tab and open save modal
+			tabStore.switchTab(tabId);
+			setTimeout(() => openSaveModal(), 100); // Small delay to ensure tab switch
+		}
+	}
+	
 	function handleTabNameChanged(event) {
 		// Refresh collections sidebar when a tab name is changed
 		// Add a small delay to ensure the backend update is complete
@@ -111,7 +127,8 @@
 		}
 
 		if (!activeTab.data.requestId) {
-			showToast('Cannot save: This is not a saved request. Create a request from collections to save changes.', 'error', 3000);
+			// This is a new request - open save modal
+			openSaveModal();
 			return;
 		}
 
@@ -140,6 +157,46 @@
 			console.error('Failed to save request:', error);
 			showToast('Failed to save request', 'error');
 		}
+	}
+
+	// Open save modal for new requests
+	function openSaveModal() {
+		if (!activeTab) return;
+		
+		saveModalRequestData = {
+			method: activeTab.data.method,
+			endpoint: activeTab.data.endpoint,
+			baseEndpoint: activeTab.data.baseEndpoint,
+			requestBody: activeTab.data.requestBody,
+			description: activeTab.data.description
+		};
+		saveModalOpen = true;
+	}
+
+	// Handle successful save from modal
+	function handleSaveSuccess(createdRequest) {
+		if (!activeTab) return;
+		
+		// Update the tab with the saved request ID and mark as saved
+		tabStore.updateTabData(activeTab.id, {
+			requestId: createdRequest.id
+		});
+		tabStore.markTabSaved(activeTab.id);
+		
+		// Update tab title to match saved name
+		tabStore.updateTabTitle(activeTab.id, createdRequest.name);
+		
+		// Refresh collections sidebar to show the new request
+		if (window.refreshCollections) {
+			window.refreshCollections();
+		}
+		
+		showToast('Request saved successfully', 'success');
+	}
+
+	// Handle save modal cancel
+	function handleSaveCancel() {
+		saveModalOpen = false;
 	}
 
 	// Handle keyboard shortcuts
@@ -289,6 +346,7 @@
 		on:tabClose={handleTabClose}
 		on:tabAdd={handleTabAdd}
 		on:tabNameChanged={handleTabNameChanged}
+		on:tabSave={handleTabSave}
 	/>
 	
 	<!-- Active tab content -->
@@ -362,6 +420,14 @@
 	<!-- Collections Sidebar - Only on REST page -->
 	<CollectionsSidebar 
 		bind:isOpen={$collectionsOpen}
+	/>
+	
+	<!-- Save Request Modal -->
+	<SaveRequestModal
+		bind:isOpen={saveModalOpen}
+		requestData={saveModalRequestData}
+		onSave={handleSaveSuccess}
+		onCancel={handleSaveCancel}
 	/>
 	
 	<!-- Toast Component -->

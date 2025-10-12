@@ -689,11 +689,21 @@
 					<div class="inline-block">
 						<span 
 							class="text-sm theme-text-primary cursor-pointer theme-hover px-1 py-0.5 rounded inline-block"
+							role="button"
+							tabindex="0"
 							onclick={(e) => {
 								e.stopPropagation();
 								startEditing(node);
 							}}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									e.stopPropagation();
+									startEditing(node);
+								}
+							}}
 							title="Click to edit"
+							aria-label={`Edit ${node.name}`}
 						>
 							{node.name}
 						</span>

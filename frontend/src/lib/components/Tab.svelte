@@ -120,6 +120,11 @@
 		isEditing = false;
 		editingName = '';
 	}
+	
+	function handleSaveClick(event) {
+		event.stopPropagation();
+		dispatch('save', tab.id);
+	}
 </script>
 
 <div 
@@ -151,6 +156,20 @@
 			<span class="modified-indicator ml-1 w-2 h-2 bg-orange-500 rounded-full" title="Unsaved changes"></span>
 		{/if}
 	</span>
+	
+	<!-- Save button for unsaved new requests -->
+	{#if tab.isModified && !tab.data.requestId}
+		<button
+			class="save-button ml-2 w-5 h-5 flex items-center justify-center rounded transition-colors"
+			onclick={handleSaveClick}
+			title="Save request (Ctrl+S)"
+			aria-label="Save request"
+		>
+			<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+			</svg>
+		</button>
+	{/if}
 	
 	<!-- Close button -->
 	{#if showCloseButton}
@@ -205,6 +224,22 @@
 		color: var(--text-secondary);
 	}
 	
+	.save-button {
+		opacity: 0;
+		transition: opacity 0.2s ease;
+		color: var(--text-secondary);
+	}
+	
+	.save-button:hover {
+		background-color: #dcfce7; /* green-100 */
+		color: #16a34a; /* green-600 */
+	}
+	
+	:root.dark .save-button:hover {
+		background-color: #14532d; /* green-900 */
+		color: #4ade80; /* green-400 */
+	}
+	
 	.close-button:hover {
 		background-color: #fecaca; /* red-200 */
 		color: #dc2626; /* red-600 */
@@ -219,6 +254,10 @@
 		opacity: 1;
 	}
 	
+	.tab-item:hover .save-button {
+		opacity: 1;
+	}
+	
 	.modified-indicator {
 		flex-shrink: 0;
 	}
@@ -228,7 +267,7 @@
 {#if toastVisible}
 	<Toast 
 		message={toastMessage} 
-		type={toastType} 
+		type={toastType}
 		visible={toastVisible}
 		onHide={() => toastVisible = false}
 	/>
