@@ -495,7 +495,7 @@
 {#if isOpen}
 	<div 
 		class="fixed top-0 h-full w-80 max-w-80 z-10 theme-bg-primary border-r theme-border shadow-xl"
-		style="left: {sidebarWidth}px;"
+		style="left: {sidebarWidth}px; transition: left 500ms cubic-bezier(0.23, 1, 0.32, 1);"
 		transition:slideFromSidebar={{ duration: 500, easing: quintOut }}
 	>
 		<!-- Header -->

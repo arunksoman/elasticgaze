@@ -171,7 +171,8 @@
 
 <!-- Sidebar -->
 <nav 
-	class={`flex flex-col h-full py-4 px-2 theme-bg-secondary shadow-lg transition-all duration-300 ${expanded ? 'w-56' : 'w-16'} relative z-10`}
+	class={`flex flex-col h-full py-4 px-2 theme-bg-secondary shadow-lg relative z-10 ${expanded ? 'w-56' : 'w-16'}`}
+	style="transition: width 500ms cubic-bezier(0.23, 1, 0.32, 1);"
 	onmouseenter={handleSidebarEnter}
 	onmouseleave={handleSidebarLeave}
 >
@@ -310,8 +311,8 @@
 <!-- Floating Collections Chevron - only show on REST page when collections is closed -->
 {#if page.url.pathname === '/rest' && !$collectionsOpen}
 	<button
-		class="fixed top-24 z-20 p-2 rounded-r-lg theme-bg-secondary theme-hover shadow-lg transition-all duration-300 theme-text-secondary hover:theme-text-primary"
-		style="left: {expanded ? '224px' : '64px'};"
+		class="fixed top-24 z-20 p-2 rounded-r-lg theme-bg-secondary theme-hover shadow-lg theme-text-secondary hover:theme-text-primary"
+		style="left: {expanded ? '224px' : '64px'}; transition: left 500ms cubic-bezier(0.23, 1, 0.32, 1);"
 		onclick={toggleCollections}
 		title="Open Collections"
 	>
