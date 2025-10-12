@@ -5,13 +5,31 @@
 	import ResponseViewer from './ResponseViewer.svelte';
 	import ResizableSplitter from './ResizableSplitter.svelte';
 	import CollectionsSidebar from './CollectionsSidebar.svelte';
-	import { ExecuteElasticsearchRequest } from '$lib/wailsjs/go/main/App.js';
+	import Toast from '$lib/Toast.svelte';
+	import { ExecuteElasticsearchRequest, UpdateRestRequest } from '$lib/wailsjs/go/main/App.js';
 	import { tabStore } from '$lib/stores/tabStore.js';
 	import { collectionsOpen } from '$lib/stores/collectionsStore.js';
+	import { onMount } from 'svelte';
 	
 	// Subscribe to tab store
 	let tabState = $state({});
 	let activeTab = $state(null);
+	
+	// Toast state
+	let toastShow = $state(false);
+	let toastMessage = $state('');
+	let toastType = $state('success');
+	let toastDuration = $state(1500);
+	let toastAnimation = $state('fade');
+
+	// Toast function
+	function showToast(message, type = 'success', duration = 1500, animation = 'fade') {
+		toastMessage = message;
+		toastType = type;
+		toastDuration = duration;
+		toastAnimation = animation;
+		toastShow = true;
+	}
 	
 	$effect(() => {
 		const unsubscribe = tabStore.subscribe(store => {
@@ -68,12 +86,77 @@
 		tabStore.addTab();
 	}
 	
+	function handleTabNameChanged(event) {
+		// Refresh collections sidebar when a tab name is changed
+		// Add a small delay to ensure the backend update is complete
+		setTimeout(() => {
+			if (window.refreshCollections) {
+				window.refreshCollections();
+			}
+		}, 100);
+	}
+	
 	// Data update helpers
 	function updateTabData(data) {
 		if (activeTab) {
 			tabStore.updateTabData(activeTab.id, data);
 		}
 	}
+
+	// Save current tab data to database
+	async function saveTabData() {
+		if (!activeTab) {
+			console.log('Cannot save: No active tab');
+			return;
+		}
+
+		if (!activeTab.data.requestId) {
+			showToast('Cannot save: This is not a saved request. Create a request from collections to save changes.', 'error', 3000);
+			return;
+		}
+
+		try {
+			const updateData = {
+				name: activeTab.title,
+				method: activeTab.data.method,
+				url: activeTab.data.endpoint,
+				body: activeTab.data.requestBody || null,
+				description: activeTab.data.description || null
+			};
+
+			await UpdateRestRequest(activeTab.data.requestId, updateData);
+			
+			// Mark tab as saved (remove modified indicator)
+			tabStore.markTabSaved(activeTab.id);
+			
+			// Refresh collections sidebar to reflect changes
+			if (window.refreshCollections) {
+				window.refreshCollections();
+			}
+			
+			showToast('Request saved successfully', 'success');
+			console.log('Request saved successfully');
+		} catch (error) {
+			console.error('Failed to save request:', error);
+			showToast('Failed to save request', 'error');
+		}
+	}
+
+	// Handle keyboard shortcuts
+	function handleKeydown(event) {
+		if (event.ctrlKey && event.key === 's') {
+			event.preventDefault();
+			saveTabData();
+		}
+	}
+
+	// Add keyboard event listener
+	onMount(() => {
+		document.addEventListener('keydown', handleKeydown);
+		return () => {
+			document.removeEventListener('keydown', handleKeydown);
+		};
+	});
 	
 	// REST API handlers
 	function handleMethodChange(event) {
@@ -205,13 +288,28 @@
 		on:tabSelect={handleTabSelect}
 		on:tabClose={handleTabClose}
 		on:tabAdd={handleTabAdd}
+		on:tabNameChanged={handleTabNameChanged}
 	/>
 	
 	<!-- Active tab content -->
 	{#if activeTab}
 		<div class="flex-1 flex flex-col min-h-0">
 			<div class="p-6 pb-0 flex-shrink-0">
-				<h1 class="text-2xl font-medium mb-6 theme-text-primary">REST API</h1>
+				<div class="flex items-center justify-between mb-6">
+					<h1 class="text-2xl font-medium theme-text-primary">REST API</h1>
+					{#if activeTab?.isModified}
+						<div class="flex items-center gap-2 text-sm theme-text-secondary">
+							<span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+							{#if activeTab.data.requestId}
+								<span>Unsaved changes</span>
+								<kbd class="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl+S</kbd>
+								<span>to save</span>
+							{:else}
+								<span>Unsaved changes (Create request in collections to save)</span>
+							{/if}
+						</div>
+					{/if}
+				</div>
 				
 				<RestRequestForm 
 					method={activeTab.data.method}
@@ -264,5 +362,14 @@
 	<!-- Collections Sidebar - Only on REST page -->
 	<CollectionsSidebar 
 		bind:isOpen={$collectionsOpen}
+	/>
+	
+	<!-- Toast Component -->
+	<Toast 
+		bind:show={toastShow} 
+		message={toastMessage} 
+		type={toastType} 
+		duration={toastDuration} 
+		animation={toastAnimation} 
 	/>
 </div>

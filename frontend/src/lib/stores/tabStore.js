@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 
 // Tab data structure
 const createTab = (id) => ({
@@ -13,7 +13,8 @@ const createTab = (id) => ({
 		requestBody: '',
 		description: '',
 		responseData: '',
-		isLoading: false
+		isLoading: false,
+		requestId: null // Add requestId to track which saved request this tab represents
 	}
 });
 
@@ -94,7 +95,7 @@ const createTabStore = () => {
 		updateTabTitle: (tabId, title) => update(store => ({
 			...store,
 			tabs: store.tabs.map(tab => 
-				tab.id === tabId ? { ...tab, title } : tab
+				tab.id === tabId ? { ...tab, title: title } : tab
 			)
 		})),
 		
@@ -114,6 +115,12 @@ const createTabStore = () => {
 		// Get tab by ID
 		getTab: (store, tabId) => {
 			return store.tabs.find(tab => tab.id === tabId);
+		},
+
+		// Find tab by request ID
+		findTabByData: (requestId) => {
+			const store = get(tabStore);
+			return store.tabs.find(tab => tab.data.requestId === requestId) || null;
 		}
 	};
 };

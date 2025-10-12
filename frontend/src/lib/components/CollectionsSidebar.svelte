@@ -93,6 +93,13 @@
 	// Load collections on mount
 	onMount(() => {
 		loadCollections();
+		
+		// Expose refresh function globally for tab container
+		window.refreshCollections = loadCollections;
+		
+		return () => {
+			delete window.refreshCollections;
+		};
 	});
 
 	// Watch for isOpen changes to reload data
@@ -122,20 +129,53 @@
 	function selectRequest(request) {
 		console.log('Request selected:', request);
 		
-		// Load request data into a new tab
-		const newTabData = {
-			method: request.method || 'GET',
-			endpoint: request.url || '',
-			baseEndpoint: request.url || '',
-			params: [],
-			requestBody: request.body || '',
-			description: request.description || '',
-			responseData: null,
-			isLoading: false
-		};
+		// Check if there's already a tab open with this request
+		const existingTab = tabStore.findTabByData(request.id);
 		
-		// Add a new tab with the loaded request data
-		tabStore.addTab(request.name || 'Loaded Request', newTabData);
+		if (existingTab) {
+			// If tab exists, just switch to it
+			// Only update the tab name if it's significantly different (not just edited)
+			tabStore.switchTab(existingTab.id);
+			// Don't automatically override tab names - let user edits persist
+		} else {
+			// Parse URL to extract base and params
+			const parsed = parseUrl(request.url || '');
+			
+			// Create new tab only if one doesn't exist
+			const newTabData = {
+				method: request.method || 'GET',
+				endpoint: request.url || '',
+				baseEndpoint: parsed.base,
+				params: parsed.params,
+				requestBody: request.body || '',
+				description: request.description || '',
+				responseData: null,
+				isLoading: false,
+				requestId: request.id // Add request ID to track it
+			};
+			
+			// Add a new tab with the loaded request data
+			tabStore.addTab(request.name || 'Loaded Request', newTabData);
+		}
+	}
+
+	// Helper function to parse URL (duplicate from TabbedRestContainer for independence)
+	function parseUrl(url) {
+		if (!url) return { base: '', params: [] };
+		
+		const [base, queryString] = url.split('?');
+		if (!queryString) return { base: url, params: [] };
+		
+		const params = queryString.split('&').map(param => {
+			const [key, value] = param.split('=');
+			return {
+				key: decodeURIComponent(key || ''),
+				value: decodeURIComponent(value || ''),
+				enabled: true
+			};
+		}).filter(p => p.key);
+		
+		return { base, params };
 	}
 
 	// Start editing
@@ -156,12 +196,21 @@
 		if (!editingNode || !editingName.trim()) return;
 		
 		try {
+			const oldName = editingNode.name;
+			const newName = editingName.trim();
+			
 			if (editingNode.type === 'collection') {
-				await UpdateCollection(editingNode.id, { name: editingName.trim() });
+				await UpdateCollection(editingNode.id, { name: newName });
 			} else if (editingNode.type === 'folder') {
-				await UpdateFolder(editingNode.id, { name: editingName.trim() });
+				await UpdateFolder(editingNode.id, { name: newName });
 			} else if (editingNode.type === 'request') {
-				await UpdateRestRequest(editingNode.id, { name: editingName.trim() });
+				await UpdateRestRequest(editingNode.id, { name: newName });
+				
+				// Update any open tabs with this request
+				const existingTab = tabStore.findTabByData(editingNode.id);
+				if (existingTab && oldName !== newName) {
+					tabStore.updateTabTitle(existingTab.id, newName);
+				}
 			}
 			await loadCollections();
 		} catch (error) {
@@ -174,6 +223,9 @@
 
 	// Handle key events for editing
 	function handleEditKeydown(event) {
+		// Stop all key events from bubbling up to prevent tree toggle
+		event.stopPropagation();
+		
 		if (event.key === 'Enter') {
 			event.preventDefault();
 			saveEdit();
@@ -181,6 +233,7 @@
 			event.preventDefault();
 			cancelEditing();
 		}
+		// Allow all other keys including space
 	}
 
 	// Context menu actions
@@ -414,12 +467,9 @@
 			console.log('🔄 Updating request:', draggedItem.id, 'with:', updateRequest);
 			
 			const result = await UpdateRestRequest(draggedItem.id, updateRequest);
-			console.log('✅ Update result:', result);
 
 			// Reload collections to reflect the change
-			console.log('🔄 Reloading collections...');
 			await loadCollections();
-			console.log('✅ Collections reloaded:', JSON.stringify($state.snapshot(collectionsData), null, 2));
 			
 			// Show success message using captured names
 			showToast(`Request "${draggedItemName}" moved to ${targetNodeName}`, 'success');
@@ -566,7 +616,16 @@
 					toggleNode(node.id, node.type);
 				}
 			}}
+			ondblclick={() => {
+				// Double-click to edit any node
+				startEditing(node);
+			}}
 			onkeydown={(e) => {
+				// Don't handle keys if we're currently editing
+				if (editingNode && editingNode.id === node.id && editingNode.type === node.type) {
+					return;
+				}
+				
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
 					if (node.type === 'request') {
@@ -615,12 +674,25 @@
 						type="text"
 						bind:value={editingName}
 						class="w-full px-1 py-0 text-sm bg-transparent border-b theme-border theme-text-primary focus:outline-none focus:border-purple-500 focus-input"
+						onclick={(e) => e.stopPropagation()}
 						onkeydown={handleEditKeydown}
-						onblur={saveEdit}
+						onblur={(e) => {
+							// Auto-save when losing focus
+							e.stopPropagation();
+							saveEdit();
+						}}
+						onfocus={(e) => e.stopPropagation()}
 						use:focus
 					/>
 				{:else}
-					<span class="text-sm theme-text-primary truncate block">
+					<span 
+						class="text-sm theme-text-primary truncate block cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-1 py-0.5 rounded"
+						onclick={(e) => {
+							e.stopPropagation();
+							startEditing(node);
+						}}
+						title="Click to edit"
+					>
 						{node.name}
 					</span>
 				{/if}

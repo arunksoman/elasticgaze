@@ -20,6 +20,10 @@
 		dispatch('tabClose', event.detail);
 	}
 	
+	function handleTabNameChanged(event) {
+		dispatch('tabNameChanged', event.detail);
+	}
+	
 	function handleAddTab() {
 		if (tabs.length < maxTabs) {
 			dispatch('tabAdd');
@@ -37,6 +41,7 @@
 				showCloseButton={tabs.length > 1}
 				on:select={handleTabSelect}
 				on:close={handleTabClose}
+				on:nameChanged={handleTabNameChanged}
 			/>
 		{/each}
 	</div>
