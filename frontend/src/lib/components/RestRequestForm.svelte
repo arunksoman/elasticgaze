@@ -47,7 +47,7 @@
 		<RequestMethodSelector {method} on:change={(e) => handleMethodChange(e.detail)} />
 	</div>
 	<div class="flex-1 min-w-0">
-		<RequestUrlInput {endpoint} on:change={(e) => handleEndpointChange(e.detail)} />
+		<RequestUrlInput {endpoint} {method} on:change={(e) => handleEndpointChange(e.detail)} />
 	</div>
 	<div class="flex-shrink-0">
 		<button 

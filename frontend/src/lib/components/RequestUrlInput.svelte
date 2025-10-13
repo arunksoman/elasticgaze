@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
 	import { ConnectionUrlService } from '$lib/services/connectionUrlService.js';
 	import { connectionUpdateTrigger } from '$lib/stores/connectionUpdateStore.js';
+	import { UrlAutocompleteService, type UrlSuggestion } from '$lib/services/urlAutocompleteService.js';
 	
 	const dispatch = createEventDispatcher();
 	
 	// Use $props() for Svelte 5 runes mode
 	let {
-		endpoint = ''
+		endpoint = '',
+		method = 'GET'
 	} = $props();
 	
 	// State for base URL information
@@ -20,9 +22,21 @@
 	let showTooltip = $state(false);
 	let isLoading = $state(true);
 	
+	// Autocomplete state
+	let suggestions = $state<UrlSuggestion[]>([]);
+	let showSuggestions = $state(false);
+	let selectedSuggestionIndex = $state(-1);
+	let inputElement: HTMLInputElement;
+	let suggestionsContainer = $state<HTMLDivElement>();
+	
 	// Load base URL on component mount
 	onMount(async () => {
 		await loadBaseUrl();
+	});
+	
+	// Cleanup on component destroy
+	onDestroy(() => {
+		clearTimeout(debounceTimer);
 	});
 	
 	// Listen for connection updates
@@ -30,6 +44,29 @@
 		// React to connection update triggers
 		$connectionUpdateTrigger;
 		loadBaseUrl();
+	});
+	
+	// Debounce timer for input handling
+	let debounceTimer: ReturnType<typeof setTimeout>;
+	let previousMethod = method;
+	let isMouseOverSuggestions = $state(false);
+	
+	// Handle method changes without causing reactive loops
+	$effect(() => {
+		if (method !== previousMethod) {
+			previousMethod = method;
+			// Clear existing suggestions and update if there's input
+			if (endpoint.trim()) {
+				clearTimeout(debounceTimer);
+				debounceTimer = setTimeout(() => {
+					updateSuggestions();
+				}, 100);
+			} else {
+				suggestions = [];
+				showSuggestions = false;
+				selectedSuggestionIndex = -1;
+			}
+		}
 	});
 	
 	async function loadBaseUrl() {
@@ -51,8 +88,126 @@
 	function handleInput(event: Event) {
 		const target = event.target as HTMLInputElement;
 		endpoint = target.value;
+		
+		// Debounce suggestions update to prevent excessive calls
+		clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(() => {
+			updateSuggestions();
+		}, 150);
+		
 		// Dispatch only the endpoint, let the parent handle complete URL building
 		dispatch('change', endpoint);
+	}
+	
+	function updateSuggestions() {
+		try {
+			if (!endpoint.trim()) {
+				suggestions = [];
+				showSuggestions = false;
+				selectedSuggestionIndex = -1;
+				return;
+			}
+			
+			const newSuggestions = UrlAutocompleteService.getSuggestions(method, endpoint, 20);
+			
+			// Only update if suggestions count changed or first suggestion is different
+			const shouldUpdate = newSuggestions.length !== suggestions.length ||
+				(newSuggestions.length > 0 && suggestions.length > 0 && newSuggestions[0].path !== suggestions[0].path);
+			
+			if (shouldUpdate) {
+				suggestions = newSuggestions;
+				showSuggestions = newSuggestions.length > 0;
+				selectedSuggestionIndex = -1;
+			}
+		} catch (error) {
+			console.error('Error updating suggestions:', error);
+			suggestions = [];
+			showSuggestions = false;
+			selectedSuggestionIndex = -1;
+		}
+	}
+	
+	function handleKeydown(event: KeyboardEvent) {
+		if (!showSuggestions || suggestions.length === 0) {
+			if (event.key === 'Escape') {
+				showSuggestions = false;
+				selectedSuggestionIndex = -1;
+			}
+			return;
+		}
+		
+		switch (event.key) {
+			case 'ArrowDown':
+				event.preventDefault();
+				selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, suggestions.length - 1);
+				scrollToSelectedSuggestion();
+				break;
+			case 'ArrowUp':
+				event.preventDefault();
+				selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+				scrollToSelectedSuggestion();
+				break;
+			case 'Enter':
+				event.preventDefault();
+				if (selectedSuggestionIndex >= 0) {
+					selectSuggestion(suggestions[selectedSuggestionIndex]);
+				}
+				break;
+			case 'Escape':
+				event.preventDefault();
+				showSuggestions = false;
+				selectedSuggestionIndex = -1;
+				break;
+		}
+	}
+	
+	async function scrollToSelectedSuggestion() {
+		await tick();
+		if (selectedSuggestionIndex >= 0 && suggestionsContainer) {
+			const selectedElement = suggestionsContainer.children[selectedSuggestionIndex] as HTMLElement;
+			if (selectedElement) {
+				selectedElement.scrollIntoView({ block: 'nearest' });
+			}
+		}
+	}
+	
+	function selectSuggestion(suggestion: UrlSuggestion) {
+		// Clear any pending debounced updates
+		clearTimeout(debounceTimer);
+		
+		endpoint = suggestion.path;
+		showSuggestions = false;
+		selectedSuggestionIndex = -1;
+		suggestions = []; // Clear suggestions to prevent re-renders
+		isMouseOverSuggestions = false; // Reset mouse state
+		
+		dispatch('change', endpoint);
+		
+		// Use setTimeout to ensure the focus happens after the blur
+		setTimeout(() => {
+			inputElement?.focus();
+		}, 0);
+	}
+	
+	function handleFocus() {
+		if (endpoint.trim() && suggestions.length > 0) {
+			showSuggestions = true;
+		}
+	}
+	
+	function handleBlur() {
+		// Don't hide suggestions if mouse is over them
+		if (isMouseOverSuggestions) {
+			return;
+		}
+		
+		// Delay to allow mouse click on suggestions
+		setTimeout(() => {
+			if (!isMouseOverSuggestions) {
+				showSuggestions = false;
+				selectedSuggestionIndex = -1;
+			}
+		}, 300);
 	}
 	
 	function handleMouseEnter() {
@@ -75,7 +230,7 @@
 	}
 </script>
 
-<div class="flex-1">
+<div class="flex-1 relative">
 	<div class="flex items-stretch border theme-border rounded overflow-hidden h-10">
 		<!-- Base URL Display Box -->
 		<div 
@@ -130,12 +285,50 @@
 		
 		<!-- Endpoint Input -->
 		<input 
+			bind:this={inputElement}
 			type="text" 
 			value={endpoint}
 			oninput={handleInput}
+			onkeydown={handleKeydown}
+			onfocus={handleFocus}
+			onblur={handleBlur}
 			class="flex-1 px-3 py-2 theme-bg-tertiary theme-text-primary border-0 outline-none focus:theme-bg-primary h-full"
+			autocomplete="off"
+			spellcheck="false"
 		/>
 	</div>
+	
+	<!-- Suggestions Dropdown -->
+	{#if showSuggestions && suggestions.length > 0}
+		<div 
+			bind:this={suggestionsContainer}
+			class="absolute top-full left-0 right-0 z-50 mt-1 theme-bg-primary border theme-border rounded-md shadow-lg max-h-96 overflow-y-auto"
+			role="listbox"
+			tabindex="-1"
+			onmouseenter={() => isMouseOverSuggestions = true}
+			onmouseleave={() => isMouseOverSuggestions = false}
+			onmousedown={(e) => e.preventDefault()}
+		>
+			{#each suggestions as suggestion, index}
+				<button
+					class="w-full px-3 py-2 text-left text-sm theme-text-primary hover:theme-bg-secondary transition-colors border-b theme-border last:border-b-0 font-mono {selectedSuggestionIndex === index ? 'theme-bg-secondary' : ''}"
+					role="option"
+					aria-selected={selectedSuggestionIndex === index}
+					onclick={() => selectSuggestion(suggestion)}
+					onmouseup={() => selectSuggestion(suggestion)}
+					onmouseenter={() => selectedSuggestionIndex = index}
+					onmousedown={(e) => e.preventDefault()}
+				>
+					<div class="flex items-center justify-between">
+						<span class="truncate">{suggestion.path}</span>
+						<span class="text-xs theme-text-muted ml-2 flex-shrink-0">
+							{method}
+						</span>
+					</div>
+				</button>
+			{/each}
+		</div>
+	{/if}
 	
 	<!-- Complete URL Display - Reserve space to prevent layout shifts -->
 	<div class="mt-1 h-4 text-xs theme-text-muted font-mono break-all">
