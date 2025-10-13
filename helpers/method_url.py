@@ -49,7 +49,7 @@ def extract_methods_urls_from_openapi(openapi_file_path, output_file_path):
 if __name__ == "__main__":
     # File paths
     openapi_file = r"c:\Users\LENOVO\Downloads\elasticsearch-openapi-source.json"
-    output_file = r"d:\desktop_apps\elasticgaze\helpers\elasticsearch_methods_urls.json"
+    output_file = r"d:\desktop_apps\elasticgaze\helpers\elasticsearch_methods_paths.json"
     
     # Extract methods and URLs
     result = extract_methods_urls_from_openapi(openapi_file, output_file)

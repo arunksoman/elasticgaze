@@ -473,7 +473,23 @@ func (s *ElasticsearchService) ExecuteRestRequest(config *models.Config, req *mo
 		}, nil
 	}
 
-	// Convert config to connection request for URL building
+	// Use the endpoint as complete URL (frontend now sends full URLs)
+	url := strings.TrimSpace(req.Endpoint)
+
+	// Basic URL validation
+	if url == "" {
+		logging.Error("❌ Empty URL provided")
+		return &models.ElasticsearchRestResponse{
+			Success:      false,
+			StatusCode:   400,
+			ErrorDetails: "URL cannot be empty",
+			ErrorCode:    "INVALID_URL",
+		}, nil
+	}
+
+	logging.Infof("🌐 Request URL: %s", url)
+
+	// Convert config to connection request for authentication
 	connReq := &models.TestConnectionRequest{
 		Host:                 config.Host,
 		Port:                 config.Port,
@@ -482,16 +498,6 @@ func (s *ElasticsearchService) ExecuteRestRequest(config *models.Config, req *mo
 		Username:             config.Username,
 		Password:             config.Password,
 	}
-
-	// Clean and normalize the endpoint
-	endpoint := strings.TrimSpace(req.Endpoint)
-	if !strings.HasPrefix(endpoint, "/") {
-		endpoint = "/" + endpoint
-	}
-
-	// Build the URL
-	url := s.buildURL(connReq, endpoint)
-	logging.Infof("🌐 Request URL: %s", url)
 
 	// Prepare request body
 	var body io.Reader

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	
 	const dispatch = createEventDispatcher();
@@ -9,8 +9,8 @@
 	} = $props();
 	
 	// Postman-style method colors - match CollectionsSidebar colors
-	function getMethodColor(methodName) {
-		const colors = {
+	function getMethodColor(methodName: string): string {
+		const colors: Record<string, string> = {
 			'GET': 'text-blue-600 dark:text-blue-400',
 			'POST': 'text-green-600 dark:text-green-400',
 			'PUT': 'text-orange-600 dark:text-orange-400',
@@ -22,8 +22,9 @@
 		return colors[methodName] || 'text-gray-600 dark:text-gray-400';
 	}
 	
-	function handleChange(event) {
-		method = event.target.value;
+	function handleChange(event: Event) {
+		const target = event.target as HTMLSelectElement;
+		method = target.value;
 		dispatch('change', method);
 	}
 </script>
@@ -31,7 +32,7 @@
 <select 
 	value={method}
 	onchange={handleChange}
-	class={`border theme-border p-2 theme-bg-tertiary rounded font-semibold ${getMethodColor(method)} min-w-[100px]`}
+	class={`border theme-border p-2 theme-bg-tertiary rounded font-semibold ${getMethodColor(method)} min-w-[100px] h-10`}
 >
 	<option value="GET" class="text-blue-600 dark:text-blue-400 font-semibold">GET</option>
 	<option value="POST" class="text-green-600 dark:text-green-400 font-semibold">POST</option>
