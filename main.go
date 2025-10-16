@@ -36,12 +36,12 @@ func main() {
 	// Create application with options
 	err = wails.Run(&options.App{
 		Title:            "ElasticGaze",
-		Width:            800,
-		Height:           600,
+		Width:            980,
+		Height:           752,
 		Frameless:        true,
 		WindowStartState: options.Normal,
-		MinWidth:         800,
-		MinHeight:        600,
+		MinWidth:         980,
+		MinHeight:        752,
 		Logger:           wailsLogger, // Register our custom logger with Wails
 		AssetServer: &assetserver.Options{
 			Assets: assets,
@@ -54,6 +54,8 @@ func main() {
 				logging.Error("Error closing database:", err.Error())
 			}
 		},
+		CSSDragProperty: "--wails-draggable",
+		CSSDragValue:    "drag",
 		Bind: []interface{}{
 			app,
 		},
