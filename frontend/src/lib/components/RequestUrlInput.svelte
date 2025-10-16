@@ -55,8 +55,8 @@
 	$effect(() => {
 		if (method !== previousMethod) {
 			previousMethod = method;
-			// Clear existing suggestions and update if there's input
-			if (endpoint.trim()) {
+			// Clear existing suggestions and update if there's enough input
+			if (endpoint.trim() && endpoint.trim().length >= 2) {
 				clearTimeout(debounceTimer);
 				debounceTimer = setTimeout(() => {
 					updateSuggestions();
@@ -101,7 +101,7 @@
 	
 	function updateSuggestions() {
 		try {
-			if (!endpoint.trim()) {
+			if (!endpoint.trim() || endpoint.trim().length < 2) {
 				suggestions = [];
 				showSuggestions = false;
 				selectedSuggestionIndex = -1;
@@ -190,7 +190,7 @@
 	}
 	
 	function handleFocus() {
-		if (endpoint.trim() && suggestions.length > 0) {
+		if (endpoint.trim() && endpoint.trim().length >= 2 && suggestions.length > 0) {
 			showSuggestions = true;
 		}
 	}
